@@ -10,6 +10,6 @@ cd "$(dirname "$0")"
       /^title:/ { sub(/^title: */, ""); title=$0 }
       /^---$/ && FNR>1 && st==s { printf "- [#%s](%s) %s `%s`\n", id, FILENAME, title, pr; nextfile }
     ' [0-9]*.md)
-    [ -n "$rows" ] && printf "\n## %s\n%s\n" "$s" "$rows"
+    if [ -n "$rows" ]; then printf "\n## %s\n%s\n" "$s" "$rows"; fi
   done
 } > INDEX.md

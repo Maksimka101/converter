@@ -1,7 +1,9 @@
 # Индекс задач
 
-## todo
+## doing
 - [#1](0001-toolchain.md) Проверить тулчейн: hello-world на Compose в Termux `high`
+
+## todo
 - [#3](0003-parser-module.md) Парсер: отдельный модуль `high`
 - [#7](0007-locale-parsing.md) Парсинг на русском и английском `medium`
 - [#9](0009-top-n-results.md) Автоконвертация в топ-N валют `high`
