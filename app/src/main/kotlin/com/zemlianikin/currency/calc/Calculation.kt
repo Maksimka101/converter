@@ -1,13 +1,13 @@
 package com.zemlianikin.currency.calc
 
-// Гейт калькулятора: всё, что видит UI. Меняется только по договорённости.
-
 import com.zemlianikin.currency.core.CurrencyCode
 import com.zemlianikin.currency.core.Num
 
+// ГЕЙТ: менять только с разрешения пользователя.
 /** Символы [start, end) в строке ввода. Пустой span — позиция между символами. */
 data class Span(val start: Int, val end: Int)
 
+// ГЕЙТ: менять только с разрешения пользователя.
 /** Результат разбора и вычисления строки ввода. */
 sealed interface Calculation {
     /** virtualParens — позиции серых виртуальных '(' в тексте (#4). */
@@ -20,6 +20,7 @@ sealed interface Calculation {
     data class Failed(val error: CalcError, val span: Span) : Calculation
 }
 
+// ГЕЙТ: менять только с разрешения пользователя.
 /** Итоговое значение. Процент наружу не выходит — сворачивается в число (#5). */
 sealed interface Value {
     /** 90 usd */
@@ -32,6 +33,7 @@ sealed interface Value {
     data class Ratio(val value: Num) : Value
 }
 
+// ГЕЙТ: менять только с разрешения пользователя.
 /** Причина ошибки. Текст сообщения живёт в ресурсах. */
 sealed interface CalcError {
     // Лексер
