@@ -1,3 +1,20 @@
 <resources>
     <string name="app_name">Currency</string>
+
+    <string name="input_hint">10 usd - 10% to eur</string>
+    <string name="rates_footer">Курсы: мок · %1$s</string>
+
+    <string name="error_unknown_word">Неизвестное слово</string>
+    <string name="error_ambiguous_currency">Уточните валюту: %1$s</string>
+    <string name="error_bad_number">Неверная запись числа</string>
+    <string name="error_unexpected_token">Здесь это не подходит</string>
+    <string name="error_missing_operator">Не хватает оператора</string>
+    <string name="error_two_currencies">Две валюты у одного числа</string>
+    <string name="error_mixed_number_money">Нельзя сложить число и валюту</string>
+    <string name="error_money_times_money">Нельзя умножать валюту на валюту</string>
+    <string name="error_divide_by_money">Нельзя делить число на валюту</string>
+    <string name="error_money_percent">Процент не ставится после валюты</string>
+    <string name="error_divide_by_zero">Деление на ноль</string>
+    <string name="error_convert_ratio">Отношение нельзя конвертировать</string>
+    <string name="error_no_rate">Нет курса для этой валюты</string>
 </resources>

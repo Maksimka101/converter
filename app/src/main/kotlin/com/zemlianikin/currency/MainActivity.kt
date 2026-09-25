@@ -4,14 +4,18 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import com.zemlianikin.currency.calc.defaultCalculator
+import com.zemlianikin.currency.core.DecayingFrecency
+import com.zemlianikin.currency.core.localeSeed
+import com.zemlianikin.currency.data.PrefsUsageStore
+import com.zemlianikin.currency.rates.mockCurrencies
+import com.zemlianikin.currency.rates.mockRates
+import com.zemlianikin.currency.ui.CalculatorScreen
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,9 +31,13 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun App() {
-    Surface(Modifier.fillMaxSize()) {
-        Box(contentAlignment = Alignment.Center) {
-            Text("Currency converter")
-        }
+    // PoC: мок-курсы, заменить на реальный источник (#15).
+    val rates = remember { mockRates() }
+    val calculator = remember { defaultCalculator() }
+    val context = LocalContext.current.applicationContext
+    // PoC: стор на SharedPreferences, а не Room (#2).
+    val frecency = remember {
+        DecayingFrecency(PrefsUsageStore(context), mockCurrencies, localeSeed(Locale.getDefault()))
     }
+    CalculatorScreen(calculator, rates, frecency)
 }

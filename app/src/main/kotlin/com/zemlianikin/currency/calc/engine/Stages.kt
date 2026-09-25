@@ -23,7 +23,7 @@ interface Lexer {
 data class Balanced(val tokens: List<Token>, val virtualParens: List<Int>)
 
 // ГЕЙТ: менять только с разрешения пользователя.
-/** Дополняет скобки до парных по правилам R1b и R2 (#4). Ошибок не бросает: лишнюю ')' ловит парсер. */
+/** Дополняет скобки до парных по правилам R1b и R2 (#5). Ошибок не бросает: лишнюю ')' ловит парсер. */
 interface Balancer {
     fun balance(tokens: List<Token>): Balanced
 }

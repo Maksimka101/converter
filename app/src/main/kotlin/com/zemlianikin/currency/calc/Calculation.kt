@@ -10,8 +10,15 @@ data class Span(val start: Int, val end: Int)
 // ГЕЙТ: менять только с разрешения пользователя.
 /** Результат разбора и вычисления строки ввода. */
 sealed interface Calculation {
-    /** virtualParens — позиции серых виртуальных '(' в тексте (#4). */
-    data class Ok(val value: Value, val virtualParens: List<Int>) : Calculation
+    /**
+     * virtualParens — позиции серых виртуальных '(' в тексте (#5).
+     * currencies — все валюты, упомянутые во вводе (`10 usd to eur` → USD, EUR); для frecency (#8).
+     */
+    data class Ok(
+        val value: Value,
+        val virtualParens: List<Int>,
+        val currencies: Set<CurrencyCode>,
+    ) : Calculation
 
     /** Ввод можно дописать справа до валидного: `5 +`, `10 us` (#3). */
     data object Incomplete : Calculation
