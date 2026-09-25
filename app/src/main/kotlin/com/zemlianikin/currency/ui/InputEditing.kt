@@ -16,7 +16,9 @@ fun editInput(old: TextFieldValue, new: TextFieldValue, calculator: Calculator, 
     if (opened !== new) return opened
     val spaced = autoSpace(old, new)
     if (spaced !== new) return spaced
-    return eraseSpacedOperator(old, new)
+    val erased = eraseSpacedOperator(old, new)
+    if (erased !== new) return erased
+    return groupDigits(old, new)
 }
 
 /**
@@ -92,6 +94,77 @@ fun autoSpace(old: TextFieldValue, new: TextFieldValue, lexicon: Lexicon = Lexic
         else -> new
     }
 }
+
+/**
+ * Разряды при наборе (#13): целая часть числа группируется по три пробелом, `1000` → `1 000`, ещё `0` → `10 000`.
+ * Реагирует на набранную цифру и на backspace: стёртая цифра перегруппировывает число, backspace по пробелу
+ * между группами стирает цифру слева от него (иначе пробел тут же вернулся бы). Дробную часть (после `.` и `,`)
+ * и числа с `_`/`'` не трогает. Пробел между цифрами считается частью числа: `5 5` при наборе станет `55`.
+ */
+fun groupDigits(old: TextFieldValue, new: TextFieldValue): TextFieldValue {
+    if (!old.selection.collapsed || !new.selection.collapsed) return new
+    val cursor = new.selection.start
+    val typed = typedChar(old, new)
+    val base: TextFieldValue
+    val anchor: Int
+    if (typed != null) {
+        if (typed !in '0'..'9') return new
+        base = new
+        anchor = cursor - 1
+    } else {
+        // Один стёртый символ слева от курсора.
+        if (old.text.length != new.text.length + 1 || old.selection.start != cursor + 1 ||
+            new.text != old.text.removeRange(cursor, cursor + 1)
+        ) return new
+        val erased = old.text[cursor]
+        val digitAfter = old.text.getOrNull(cursor + 1)?.isAsciiDigit() == true
+        val digitBefore = cursor > 0 && old.text[cursor - 1].isAsciiDigit()
+        base = when {
+            // Пробел между группами: стираем и цифру перед ним.
+            erased == ' ' && digitBefore && digitAfter ->
+                new.copy(text = old.text.removeRange(cursor - 1, cursor + 1), selection = TextRange(cursor - 1), composition = null)
+            // Стёрта единственная цифра первой группы: пробел за ней уже не разделитель.
+            erased.isAsciiDigit() && !digitBefore && old.text.getOrNull(cursor + 1) == ' ' &&
+                old.text.getOrNull(cursor + 2)?.isAsciiDigit() == true ->
+                new.copy(text = old.text.removeRange(cursor, cursor + 2), composition = null)
+            erased.isAsciiDigit() -> new
+            else -> return new
+        }
+        val at = base.selection.start
+        anchor = when {
+            at > 0 && base.text[at - 1].isAsciiDigit() -> at - 1
+            base.text.getOrNull(at)?.isAsciiDigit() == true -> at
+            else -> return base.takeIf { it.text != new.text } ?: new
+        }
+    }
+    val text = base.text
+    var start = anchor
+    while (start > 0 && (text[start - 1].isAsciiDigit() ||
+            (text[start - 1] == ' ' && start >= 2 && text[start - 2].isAsciiDigit()))) start--
+    var end = anchor + 1
+    while (end < text.length && (text[end].isAsciiDigit() ||
+            (text[end] == ' ' && end + 1 < text.length && text[end + 1].isAsciiDigit()))) end++
+    if (start > 0 && text[start - 1] in NUMBER_JOINERS || end < text.length && text[end] in "_'") {
+        return if (base.text == new.text) new else base
+    }
+    val span = text.substring(start, end)
+    val digits = span.filter { it != ' ' }
+    val grouped = digits.reversed().chunked(3).joinToString(" ").reversed()
+    if (grouped == span) return if (base.text == new.text) new else base
+    val left = text.substring(start, base.selection.start.coerceIn(start, end)).count { it != ' ' }
+    var pos = 0
+    var seen = 0
+    while (seen < left) { if (grouped[pos] != ' ') seen++; pos++ }
+    return base.copy(
+        text = text.substring(0, start) + grouped + text.substring(end),
+        selection = TextRange(start + pos),
+        composition = null,
+    )
+}
+
+private const val NUMBER_JOINERS = ".,_'"
+
+private fun Char.isAsciiDigit() = this in '0'..'9'
 
 /** [this] с пробелом перед только что набранным символом: `before` + пробел + символ + `after`. */
 private fun TextFieldValue.spacedBefore(before: String, after: String): TextFieldValue = copy(

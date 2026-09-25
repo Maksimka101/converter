@@ -7,8 +7,9 @@ import java.util.Locale
 /**
  * Frecency по #8: `score·2^(-Δt/halfLife) + 1` на каждое использование, распад ленивый.
  * Холодный старт: если стор пуст, [seed] записывается со score 1.0 и дальше распадается как обычное использование.
- * Рейтинг — все [known] и все, что когда-либо использовали (список пополняется автоматически, #8): сначала по score,
- * при равенстве seed-валюты выше остальных, дальше порядок [known], затем прочие.
+ * Рейтинг — seed-валюты из [known] и все, что когда-либо использовали (список пополняется автоматически, #8):
+ * по убыванию score, при равенстве порядок seed, затем порядок записи. Остальные [known] в рейтинг не входят,
+ * их добавляет только использование.
  */
 class DecayingFrecency(
     private val store: CurrencyUsageStore,
@@ -23,7 +24,7 @@ class DecayingFrecency(
 
     override suspend fun ranking(now: Instant): List<CurrencyCode> {
         val usage = loadSeeded(now)
-        val base = (seed.filter { it in known } + known + usage.keys).distinct()
+        val base = (seed.filter { it in known } + usage.keys).distinct()
         return base.sortedByDescending { scoreAt(usage[it], now) } // sortedBy стабилен
     }
 
@@ -43,12 +44,17 @@ class DecayingFrecency(
     }
 }
 
-/** Дефолты из локали (#8): валюта страны, затем USD, EUR, GBP, CNY, JPY. */
+/**
+ * Дефолты из локали (#8): валюта, затем USD, EUR. Валюта — явная (`-u-cu-`), иначе страна из региона в настройках
+ * телефона (`-u-rg-`, Android 14+), иначе страна самой локали.
+ */
 fun localeSeed(locale: Locale): List<CurrencyCode> {
     val local = try {
-        java.util.Currency.getInstance(locale).currencyCode
+        locale.getUnicodeLocaleType("cu")?.uppercase()
+            ?: locale.getUnicodeLocaleType("rg")?.take(2)?.let { java.util.Currency.getInstance(Locale("", it)).currencyCode }
+            ?: java.util.Currency.getInstance(locale).currencyCode
     } catch (_: IllegalArgumentException) {
         null // у локали нет страны
     }
-    return listOfNotNull(local, "USD", "EUR", "GBP", "CNY", "JPY").distinct().map(::CurrencyCode)
+    return listOfNotNull(local, "USD", "EUR").distinct().map(::CurrencyCode)
 }

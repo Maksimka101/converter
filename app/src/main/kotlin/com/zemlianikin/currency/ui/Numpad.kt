@@ -141,12 +141,14 @@ private fun RowScope.NumpadKey(key: Key, stretch: Boolean, onPress: () -> Unit) 
 }
 
 /**
- * Чипы валют над numpad: тап выбирает валюту. Высота фиксирована (68 dp, как у ряда [OperatorKeys]), чтобы
+ * Чипы валют над numpad: тап выбирает валюту. Показаны все [codes], а не только подходящие к месту курсора:
+ * чипы вне [enabled] неактивны, чтобы ряд не мерцал при наборе. Высота фиксирована (68 dp, как у ряда [OperatorKeys]), чтобы
  * поле ввода не сдвигалось ни когда чипов нет, ни при смене режима.
  */
 @Composable
 fun CurrencyChips(
     codes: List<CurrencyCode>,
+    enabled: Set<CurrencyCode>,
     onPick: (CurrencyCode) -> Unit,
     onAdd: () -> Unit,
     modifier: Modifier = Modifier,
@@ -168,11 +170,14 @@ fun CurrencyChips(
             items(codes, key = { it.code }) { code ->
                 SuggestionChip(
                     onClick = { onPick(code) },
+                    enabled = code in enabled,
                     label = { Text(code.code, style = MaterialTheme.typography.titleMedium) },
                     shape = CircleShape,
                     colors = SuggestionChipDefaults.suggestionChipColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         labelColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f),
+                        disabledLabelColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.4f),
                     ),
                     border = null,
                 )

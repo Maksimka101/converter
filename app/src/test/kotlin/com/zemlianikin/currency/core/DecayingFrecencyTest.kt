@@ -30,20 +30,20 @@ class DecayingFrecencyTest {
     private fun frecency(seed: List<CurrencyCode> = codes("USD", "EUR"), store: CurrencyUsageStore = MemoryStore()) =
         DecayingFrecency(store, known, seed)
 
-    @Test fun `cold start ranks seed first and then the rest`() = runBlocking {
-        assertEquals(codes("USD", "EUR", "RUB", "JPY"), frecency().ranking(t0))
+    @Test fun `cold start ranks only the seed`() = runBlocking {
+        assertEquals(codes("USD", "EUR"), frecency().ranking(t0))
     }
 
     @Test fun `seed outside known list is ignored`() = runBlocking {
-        assertEquals(codes("EUR", "USD", "RUB", "JPY"), frecency(seed = codes("EUR", "CHF", "USD")).ranking(t0))
+        assertEquals(codes("EUR", "USD"), frecency(seed = codes("EUR", "CHF", "USD")).ranking(t0))
     }
 
     @Test fun `one use equals seed weight and second use overtakes it`() = runBlocking {
         val f = frecency()
         f.recordUsed(setOf(CurrencyCode("RUB")), t0)
-        assertEquals(codes("USD", "EUR", "RUB", "JPY"), f.ranking(t0))
+        assertEquals(codes("USD", "EUR", "RUB"), f.ranking(t0))
         f.recordUsed(setOf(CurrencyCode("RUB")), t0)
-        assertEquals(codes("RUB", "USD", "EUR", "JPY"), f.ranking(t0))
+        assertEquals(codes("RUB", "USD", "EUR"), f.ranking(t0))
     }
 
     @Test fun `score halves after half life`() = runBlocking {
@@ -66,16 +66,21 @@ class DecayingFrecencyTest {
 
     @Test fun `currency outside the known list joins the ranking once it is used`() = runBlocking {
         val f = frecency()
-        assertEquals(codes("USD", "EUR", "RUB", "JPY"), f.ranking(t0))
+        assertEquals(codes("USD", "EUR"), f.ranking(t0))
         f.recordUsed(setOf(CurrencyCode("SEK")), t0)
-        assertEquals(codes("USD", "EUR", "SEK", "RUB", "JPY"), f.ranking(t0))
+        assertEquals(codes("USD", "EUR", "SEK"), f.ranking(t0))
         f.recordUsed(setOf(CurrencyCode("SEK")), t0)
-        assertEquals(codes("SEK", "USD", "EUR", "RUB", "JPY"), f.ranking(t0))
+        assertEquals(codes("SEK", "USD", "EUR"), f.ranking(t0))
     }
 
     @Test fun `locale seed puts country currency first`() {
-        assertEquals(codes("RUB", "USD", "EUR", "GBP", "CNY", "JPY"), localeSeed(Locale.forLanguageTag("ru-RU")))
-        assertEquals(codes("USD", "EUR", "GBP", "CNY", "JPY"), localeSeed(Locale.US))
-        assertEquals(codes("USD", "EUR", "GBP", "CNY", "JPY"), localeSeed(Locale.ENGLISH))
+        assertEquals(codes("RUB", "USD", "EUR"), localeSeed(Locale.forLanguageTag("ru-RU")))
+        assertEquals(codes("USD", "EUR"), localeSeed(Locale.US))
+        assertEquals(codes("USD", "EUR"), localeSeed(Locale.ENGLISH))
+    }
+
+    @Test fun `region from phone settings overrides the language country`() {
+        assertEquals(codes("PLN", "USD", "EUR"), localeSeed(Locale.forLanguageTag("ru-RU-u-rg-plzzzz")))
+        assertEquals(codes("CHF", "USD", "EUR"), localeSeed(Locale.forLanguageTag("ru-RU-u-cu-chf-rg-plzzzz")))
     }
 }

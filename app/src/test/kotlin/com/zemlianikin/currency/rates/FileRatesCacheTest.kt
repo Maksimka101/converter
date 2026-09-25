@@ -1,0 +1,121 @@
+package com.zemlianikin.currency.rates
+
+import com.zemlianikin.currency.core.CurrencyCode
+import com.zemlianikin.currency.core.Num
+import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
+import java.io.File
+import java.math.BigDecimal
+import java.time.Instant
+import java.time.LocalDate
+
+class FileRatesCacheTest {
+    @get:Rule
+    val tmp = TemporaryFolder()
+
+    private fun rates(fetchedAt: Long = 1_700_000_000_123, vararg pairs: Pair<String, String>): CachedRates {
+        val map = pairs.associate { (c, v) -> CurrencyCode(c) to Num(BigDecimal(v)) }
+        return CachedRates(RatesSnapshot(LocalDate.of(2026, 9, 25), map), Instant.ofEpochMilli(fetchedAt))
+    }
+
+    private fun sample() = rates(
+        1_700_000_000_123,
+        "USD" to "1", "EUR" to "0.86", "RUB" to "82.5",
+        "BTC" to "0.0000094371", "SHIB" to "1E-10", "IDR" to "16321.123456789012345678",
+    )
+
+    @Test
+    fun `no file gives null`() = runBlocking {
+        assertNull(FileRatesCache(File(tmp.root, "rates.txt")).load())
+    }
+
+    @Test
+    fun `round trip keeps precision date time and order`() = runBlocking {
+        val cache = FileRatesCache(File(tmp.root, "rates.txt"))
+        val src = sample()
+        cache.save(src)
+        val back = assertNotNull(cache.load()).let { cache.load()!! }
+        assertEquals(src.fetchedAt, back.fetchedAt)
+        assertEquals(src.snapshot.date, back.snapshot.date)
+        assertEquals(src.snapshot.currencies, back.snapshot.currencies)
+        for ((code, num) in src.snapshot.perBase) {
+            // BigDecimal.equals учитывает scale: сравниваем строго, без compareTo.
+            assertEquals(num.value, back.snapshot.perBase.getValue(code).value)
+        }
+    }
+
+    @Test
+    fun `save overwrites atomically and leaves no temp file`() = runBlocking {
+        val file = File(tmp.root, "rates.txt")
+        val cache = FileRatesCache(file)
+        cache.save(sample())
+        val second = rates(5, "USD" to "1", "GBP" to "0.75")
+        cache.save(second)
+        val back = cache.load()!!
+        assertEquals(Instant.ofEpochMilli(5), back.fetchedAt)
+        assertEquals(listOf(CurrencyCode("USD"), CurrencyCode("GBP")), back.snapshot.currencies)
+        assertEquals(listOf("rates.txt"), tmp.root.list()!!.toList())
+    }
+
+    @Test
+    fun `save creates missing parent dirs`() = runBlocking {
+        val cache = FileRatesCache(File(tmp.root, "a/b/rates.txt"))
+        cache.save(sample())
+        assertNotNull(cache.load())
+    }
+
+    private fun assertBroken(content: String) = runBlocking {
+        val file = File(tmp.root, "rates.txt")
+        file.writeText(content)
+        assertNull("content: $content", FileRatesCache(file).load())
+        assertTrue("file must stay", file.exists())
+        assertEquals(content, file.readText())
+    }
+
+    @Test
+    fun `empty file is broken`() = assertBroken("")
+
+    @Test
+    fun `unknown version is broken`() = assertBroken("v2\n1700000000000\n2026-09-25\nUSD 1\n")
+
+    @Test
+    fun `no version line is broken`() = assertBroken("1700000000000\n2026-09-25\nUSD 1\n")
+
+    @Test
+    fun `empty table is broken`() = assertBroken("v1\n1700000000000\n2026-09-25\n")
+
+    @Test
+    fun `bad time is broken`() = assertBroken("v1\nabc\n2026-09-25\nUSD 1\n")
+
+    @Test
+    fun `bad date is broken`() = assertBroken("v1\n1700000000000\n25.09.2026\nUSD 1\n")
+
+    @Test
+    fun `bad value is broken`() = assertBroken("v1\n1700000000000\n2026-09-25\nUSD 1\nEUR abc\n")
+
+    @Test
+    fun `line without value is broken`() = assertBroken("v1\n1700000000000\n2026-09-25\nUSD 1\nEUR\n")
+
+    @Test
+    fun `blank line in table is broken`() = assertBroken("v1\n1700000000000\n2026-09-25\nUSD 1\n\nEUR 2\n")
+
+    @Test
+    fun `binary garbage is broken`() = runBlocking {
+        val file = File(tmp.root, "rates.txt")
+        file.writeBytes(byteArrayOf(0, -1, -2, 10, 0x7f, 1))
+        assertNull(FileRatesCache(file).load())
+        assertTrue(file.exists())
+    }
+
+    @Test
+    fun `directory instead of file gives null`() = runBlocking {
+        val dir = File(tmp.root, "rates.txt").also { it.mkdir() }
+        assertNull(FileRatesCache(dir).load())
+    }
+}

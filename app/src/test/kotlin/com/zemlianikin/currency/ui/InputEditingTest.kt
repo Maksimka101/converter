@@ -169,4 +169,35 @@ class InputEditingTest {
         assertEquals("10 to |", pressing("10|", "to"))
         assertEquals("(1 + 2)|", pressing("|", "(", "1", "+", "2", ")"))
     }
+
+    @Test
+    fun `digits are grouped by three`() {
+        assertTyping("100", "100|")
+        assertTyping("1000", "1 000|")
+        assertTyping("10000", "10 000|")
+        assertTyping("1000000", "1 000 000|")
+        assertTyping("1 000", "1 000|")
+        assertTyping("1000+2000", "1 000 + 2 000|")
+        assertTyping("1000usd", "1 000 usd |")
+        assertTyping("1000.5", "1 000.5|")
+        assertTyping("1000,5000", "1 000,5000|")
+        assertTyping("0.12345", "0.12345|")
+    }
+
+    @Test
+    fun `grouping in the middle keeps the cursor`() {
+        assertTyping("5", "10 5|00", from = "1 0|00")
+        assertTyping("1", "1| 234", from = "|234")
+        assertTyping("9", "9|1 000", from = "|1 000")
+    }
+
+    @Test
+    fun `backspace regroups the number`() {
+        assertTyping("⌫", "100|", from = "1 000|")
+        assertTyping("⌫", "1 000|", from = "10 000|")
+        assertTyping("⌫⌫", "10|", from = "1 000|")
+        assertTyping("⌫", "|000", from = "1 |000")
+        assertTyping("⌫", "123|", from = "1 234|")
+        assertTyping("⌫", "usd |000", from = "usd 1| 000")
+    }
 }

@@ -22,6 +22,9 @@ fun deleteInput(old: TextFieldValue, calculator: Calculator, rates: RateTable): 
     return editInput(old, next, calculator, rates)
 }
 
+/** Сколько чипов валют в ряду над numpad. */
+const val CHIP_LIMIT = 8
+
 /** Чипы валют: [codes] в порядке показа и [replace] — что в тексте заменит выбранная валюта. */
 data class Suggestions(val codes: List<CurrencyCode>, val replace: TextRange) {
     companion object {
@@ -41,7 +44,7 @@ fun suggestCurrencies(
     result: Calculation,
     ranking: List<CurrencyCode>,
     lexicon: Lexicon = Lexicon.Default,
-    limit: Int = 8,
+    limit: Int = CHIP_LIMIT,
 ): Suggestions {
     if (!input.selection.collapsed) return Suggestions.None
     val text = input.text
