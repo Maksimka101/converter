@@ -29,13 +29,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.OffsetMapping
-import androidx.compose.ui.text.input.TransformedText
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zemlianikin.currency.R
@@ -59,7 +55,8 @@ import java.time.Instant
  */
 @Composable
 fun CalculatorScreen(calculator: Calculator, rates: RateTable, frecency: CurrencyFrecency) {
-    var text by rememberSaveable { mutableStateOf("") }
+    var input by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue()) }
+    val text = input.text
     val result = remember(text, rates) { calculator.calculate(text, rates) }
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { focus.requestFocus() }
@@ -88,14 +85,20 @@ fun CalculatorScreen(calculator: Calculator, rates: RateTable, frecency: Currenc
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 BasicTextField(
-                    value = text,
-                    onValueChange = { text = it },
+                    value = input,
+                    onValueChange = { input = editInput(input, it, calculator, rates) },
                     singleLine = true,
                     textStyle = MaterialTheme.typography.headlineSmall.copy(
                         color = MaterialTheme.colorScheme.onSurface,
                     ),
                     cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.None,
+                        autoCorrectEnabled = false,
+                        // «Видимый пароль», как в Termux: Gboard показывает над буквами ряд цифр (у обычного текста
+                        // он зависит от настройки) и не подсказывает ввод. Обычный Password зовёт менеджер паролей.
+                        keyboardType = KeyboardType.PasswordVisible,
+                    ),
                     visualTransformation = underlineError(result, MaterialTheme.colorScheme.error),
                     decorationBox = { inner ->
                         Column(Modifier.padding(16.dp)) {
@@ -167,18 +170,6 @@ private fun ResultText(result: Calculation) {
         Calculation.Incomplete -> Unit
     }
 }
-
-/** Подчёркивает span ошибки в тексте. Длина текста не меняется, маппинг тождественный. */
-private fun underlineError(result: Calculation, color: androidx.compose.ui.graphics.Color) =
-    VisualTransformation { text ->
-        val styled = AnnotatedString.Builder(text)
-        if (result is Calculation.Failed) {
-            val start = result.span.start.coerceIn(0, text.length)
-            val end = result.span.end.coerceIn(start, text.length)
-            styled.addStyle(SpanStyle(color = color, textDecoration = TextDecoration.Underline), start, end)
-        }
-        TransformedText(styled.toAnnotatedString(), OffsetMapping.Identity)
-    }
 
 @Composable
 private fun errorText(error: CalcError): String = when (error) {
