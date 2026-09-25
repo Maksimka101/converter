@@ -2,6 +2,14 @@
     <string name="app_name">Currency</string>
 
     <string name="input_hint">10 usd - 10% to eur</string>
+    <string name="mode_numpad">Цифровая клавиатура</string>
+    <string name="mode_text">Обычная клавиатура</string>
+    <string name="copy_result">Копировать результат</string>
+    <string name="copy_with_expression">Копировать вместе с выражением</string>
+    <string name="add_currency">Добавить валюту</string>
+    <string name="currency_search_hint">Валюта или страна</string>
+    <string name="currency_search_empty">Ничего не найдено</string>
+    <string name="clear">Очистить</string>
     <string name="rates_footer">Курсы: мок · %1$s</string>
 
     <string name="error_unknown_word">Неизвестное слово</string>

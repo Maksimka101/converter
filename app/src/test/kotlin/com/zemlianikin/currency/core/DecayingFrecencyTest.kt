@@ -64,6 +64,15 @@ class DecayingFrecencyTest {
         assertEquals(CurrencyCode("JPY"), f.ranking(t0).first())
     }
 
+    @Test fun `currency outside the known list joins the ranking once it is used`() = runBlocking {
+        val f = frecency()
+        assertEquals(codes("USD", "EUR", "RUB", "JPY"), f.ranking(t0))
+        f.recordUsed(setOf(CurrencyCode("SEK")), t0)
+        assertEquals(codes("USD", "EUR", "SEK", "RUB", "JPY"), f.ranking(t0))
+        f.recordUsed(setOf(CurrencyCode("SEK")), t0)
+        assertEquals(codes("SEK", "USD", "EUR", "RUB", "JPY"), f.ranking(t0))
+    }
+
     @Test fun `locale seed puts country currency first`() {
         assertEquals(codes("RUB", "USD", "EUR", "GBP", "CNY", "JPY"), localeSeed(Locale.forLanguageTag("ru-RU")))
         assertEquals(codes("USD", "EUR", "GBP", "CNY", "JPY"), localeSeed(Locale.US))

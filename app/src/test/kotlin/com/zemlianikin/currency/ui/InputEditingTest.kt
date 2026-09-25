@@ -92,6 +92,18 @@ class InputEditingTest {
     }
 
     @Test
+    fun `erased space after a word comes back on the next letter or digit`() {
+        assertTyping("10 usd to⌫eur", "10 usd to eur |")
+        assertTyping("10 usd⌫to", "10 usd to |")
+        assertTyping("10 usd⌫5", "10 usd 5|")
+        assertTyping("usd⌫5", "usd 5|")
+        // слово ещё растёт или правка посреди слова: ничего не вставляем
+        assertTyping("10 inr", "10 inr |")
+        assertTyping("5", "us5|d", from = "us|d")
+        assertTyping("5", "\$5|", from = "\$|")
+    }
+
+    @Test
     fun `currency sign before a number stays tight`() {
         assertTyping("\$10", "\$10|")
         assertTyping("\$10+\$5", "\$10 + \$5|")
@@ -141,5 +153,20 @@ class InputEditingTest {
     fun `inserted opening paren can be erased`() {
         assertTyping("10+5)⌫", "(10 + 5|")
         assertTyping("⌫", "|10 + 5)", from = "(|10 + 5)")
+    }
+
+    private fun pressing(from: String, vararg keys: String): String {
+        var field = TextFieldValue(from.replace("|", ""), TextRange(from.indexOf('|').coerceAtLeast(0)))
+        for (key in keys) field = typeInput(field, key, calculator, rates)
+        return field.text.substring(0, field.selection.start) + "|" + field.text.substring(field.selection.start)
+    }
+
+    @Test
+    fun `panel keys go through the typing rules`() {
+        assertEquals("10 + |", pressing("10|", "+"))
+        assertEquals("10 * -|", pressing("10|", "*", "-"))
+        assertEquals("10 usd to |", pressing("10 usd |", "to"))
+        assertEquals("10 to |", pressing("10|", "to"))
+        assertEquals("(1 + 2)|", pressing("|", "(", "1", "+", "2", ")"))
     }
 }

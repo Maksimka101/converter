@@ -7,7 +7,8 @@ import java.util.Locale
 /**
  * Frecency по #8: `score·2^(-Δt/halfLife) + 1` на каждое использование, распад ленивый.
  * Холодный старт: если стор пуст, [seed] записывается со score 1.0 и дальше распадается как обычное использование.
- * Рейтинг — все [known]: сначала по score, при равенстве seed-валюты выше остальных, дальше порядок [known].
+ * Рейтинг — все [known] и все, что когда-либо использовали (список пополняется автоматически, #8): сначала по score,
+ * при равенстве seed-валюты выше остальных, дальше порядок [known], затем прочие.
  */
 class DecayingFrecency(
     private val store: CurrencyUsageStore,
@@ -22,14 +23,15 @@ class DecayingFrecency(
 
     override suspend fun ranking(now: Instant): List<CurrencyCode> {
         val usage = loadSeeded(now)
-        val base = (seed.filter { it in known } + known).distinct()
+        val base = (seed.filter { it in known } + known + usage.keys).distinct()
         return base.sortedByDescending { scoreAt(usage[it], now) } // sortedBy стабилен
     }
 
     private suspend fun loadSeeded(now: Instant): Map<CurrencyCode, CurrencyUsage> {
         val stored = store.load()
         if (stored.isNotEmpty()) return stored
-        val seeded = seed.associateWith { CurrencyUsage(1.0, now) }
+        // Засев вне [known] не пишем: иначе он попал бы в рейтинг вместе с реально использованными валютами.
+        val seeded = seed.filter { it in known }.associateWith { CurrencyUsage(1.0, now) }
         store.save(seeded)
         return seeded
     }

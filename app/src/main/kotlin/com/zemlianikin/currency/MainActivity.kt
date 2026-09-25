@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -15,6 +14,7 @@ import com.zemlianikin.currency.data.PrefsUsageStore
 import com.zemlianikin.currency.rates.mockCurrencies
 import com.zemlianikin.currency.rates.mockRates
 import com.zemlianikin.currency.ui.CalculatorScreen
+import com.zemlianikin.currency.ui.CurrencyTheme
 import java.util.Locale
 
 class MainActivity : ComponentActivity() {
@@ -22,7 +22,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MaterialTheme {
+            CurrencyTheme {
                 App()
             }
         }

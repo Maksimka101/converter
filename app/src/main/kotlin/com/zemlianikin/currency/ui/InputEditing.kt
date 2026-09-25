@@ -20,6 +20,29 @@ fun editInput(old: TextFieldValue, new: TextFieldValue, calculator: Calculator, 
 }
 
 /**
+ * Нажатие кнопки панели: [text] набирается в позицию курсора по одному символу через [editInput],
+ * как с клавиатуры, поэтому пробелы и скобки расставляются теми же правилами. Выделение заменяется.
+ * Кнопка-слово (`to`) сама отделяется пробелом от слова слева: авто-пробел после слов вроде `rub` (это ещё `ruble`)
+ * не ставится, а `rubto` — неизвестное слово.
+ */
+fun typeInput(old: TextFieldValue, text: String, calculator: Calculator, rates: RateTable): TextFieldValue {
+    var field = old
+    val wordBefore = old.text.getOrNull(old.selection.min - 1)?.let { Lexicon.isWordChar(it) } == true
+    val typed = if (wordBefore && text.firstOrNull()?.isLetter() == true) " $text" else text
+    for (c in typed) {
+        val start = field.selection.min
+        val base = field.copy(
+            text = field.text.removeRange(start, field.selection.max),
+            selection = TextRange(start),
+            composition = null,
+        )
+        val typed = base.copy(text = base.text.substring(0, start) + c + base.text.substring(start), selection = TextRange(start + 1))
+        field = editInput(base, typed, calculator, rates)
+    }
+    return field
+}
+
+/**
  * Набрана `)` без пары — дописывает в текст настоящую `(` там, где её поставил бы балансировщик (#5).
  * Скобка обычная: её можно стереть, дальше это уже явные скобки пользователя.
  */
@@ -44,6 +67,8 @@ fun openParenOnClose(
  * - между числом (`)`, `%`) и словом или знаком валюты: `10usd` → `10 usd`;
  * - после целого слова словаря (валюта, `to`, `of`, множитель), если оно ничем не дорастает:
  *   `usd` → `usd `, но не `in` (это ещё `inr`) и не `руб` (`рубль`);
+ * - тот же пробел ставится перед буквой или цифрой, набранной вплотную к такому слову, если авто-пробел стёрли:
+ *   `usd|` + `to` → `usd to`, иначе слова склеятся (`toeur` — неизвестное слово);
  * - пробел, набранный сразу после пробела (в том числе поставленного автоматически), игнорируется;
  * - `->` («to», #5): `-` с пробелами при вводе `>` становится `->`.
  */
@@ -59,16 +84,30 @@ fun autoSpace(old: TextFieldValue, new: TextFieldValue, lexicon: Lexicon = Lexic
             new.withTail(before + (if (before.last().isWhitespace()) "" else " ") + c, after)
         c == ' ' && before.endsWith(" ") -> new.copy(text = old.text, selection = old.selection, composition = null)
         c.isLetter() || c.isCurrencySymbol() -> {
-            val glued = before.lastOrNull()?.let { it.isDigit() || it == ')' || it == '%' } == true
-            val spaced = if (glued) new.copy(
-                text = before + " " + c + after,
-                selection = TextRange(cursor + 1),
-                composition = new.composition?.let { TextRange(it.start + if (it.start >= before.length) 1 else 0, it.end + 1) },
-            ) else new
-            spaced.spaceAfterWord(lexicon)
+            val glued = before.lastOrNull()?.let { it.isDigit() || it == ')' || it == '%' } == true ||
+                (c.isLetter() && before.endsWithFinishedWord(after, lexicon))
+            (if (glued) new.spacedBefore(before, after) else new).spaceAfterWord(lexicon)
         }
+        c.isDigit() && before.endsWithFinishedWord(after, lexicon) -> new.spacedBefore(before, after)
         else -> new
     }
+}
+
+/** [this] с пробелом перед только что набранным символом: `before` + пробел + символ + `after`. */
+private fun TextFieldValue.spacedBefore(before: String, after: String): TextFieldValue = copy(
+    text = before + " " + text[before.length] + after,
+    selection = TextRange(selection.start + 1),
+    composition = composition?.let { TextRange(it.start + if (it.start >= before.length) 1 else 0, it.end + 1) },
+)
+
+/** Текст слева заканчивается целым словом словаря, которое не дорастает, а справа слово не продолжается. */
+private fun String.endsWithFinishedWord(after: String, lexicon: Lexicon): Boolean {
+    if (after.firstOrNull()?.let { Lexicon.isWordChar(it) } == true) return false
+    val word = takeLastWhile { Lexicon.isWordChar(it) }
+    // Одиночный `$` — знак перед числом (`$10`), а не слово.
+    if (word.none { it.isLetter() }) return false
+    val meaning = lexicon.meaning(word)
+    return meaning != null && meaning !is Lexicon.Meaning.Ambiguous && !lexicon.canExtend(word)
 }
 
 /** Курсор стоит сразу за целым словом, которое дальше не растёт: ставим за ним пробел. */

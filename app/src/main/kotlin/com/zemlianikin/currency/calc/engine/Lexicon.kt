@@ -41,6 +41,21 @@ class Lexicon private constructor(private val words: Map<String, Meaning>) {
     /** Слово — собственный префикс какого-то слова словаря. */
     fun canExtend(word: String): Boolean = word.lowercase(Locale.ROOT) in prefixes
 
+    /**
+     * Валюты, у которых есть слово, начинающееся с [prefix] (`us` → USD). Неоднозначное слово даёт все свои
+     * варианты. Порядок не значим: сортировку (например, по frecency) делает вызывающий.
+     */
+    fun currenciesWithPrefix(prefix: String): List<CurrencyCode> {
+        val start = prefix.lowercase(Locale.ROOT)
+        return words.filterKeys { it.startsWith(start) }.values.flatMap { meaning ->
+            when (meaning) {
+                is Meaning.Currency -> listOf(meaning.code)
+                is Meaning.Ambiguous -> meaning.options
+                else -> emptyList()
+            }
+        }.distinct()
+    }
+
     class Builder {
         private val words = LinkedHashMap<String, Meaning>()
 
