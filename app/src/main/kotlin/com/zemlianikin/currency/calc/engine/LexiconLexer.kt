@@ -2,11 +2,11 @@ package com.zemlianikin.currency.calc.engine
 
 // Серый ящик: лексер по словарю.
 
-import com.zemlianikin.currency.calc.Calculation
 import com.zemlianikin.currency.calc.CalcError
+import com.zemlianikin.currency.calc.Calculation
 import com.zemlianikin.currency.calc.Span
+import com.zemlianikin.currency.core.Decimal
 import com.zemlianikin.currency.core.Num
-import java.math.BigDecimal
 
 /**
  * Текст → токены со span. Бросает первую проблему слева: неизвестное или неоднозначное слово,
@@ -83,7 +83,7 @@ class LexiconLexer(private val lexicon: Lexicon = Lexicon.Default) : Lexer {
                     fail(CalcError.BadNumber, start, p)
                 }
             }
-            tokens += Token.Number(Num(BigDecimal(digits.toString())), Span(start, p))
+            tokens += Token.Number(Num(Decimal(digits.toString())), Span(start, p))
             return p
         }
 

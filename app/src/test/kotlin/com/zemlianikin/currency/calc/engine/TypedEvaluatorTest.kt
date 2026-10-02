@@ -5,15 +5,14 @@ import com.zemlianikin.currency.calc.Calculation
 import com.zemlianikin.currency.calc.Span
 import com.zemlianikin.currency.calc.Value
 import com.zemlianikin.currency.core.CurrencyCode
+import com.zemlianikin.currency.core.Decimal
 import com.zemlianikin.currency.core.Num
 import com.zemlianikin.currency.core.RateTable
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
-import java.math.BigDecimal
-import java.math.RoundingMode
-import java.time.LocalDate
 
 class TypedEvaluatorTest {
     private val usd = CurrencyCode("USD")
@@ -21,22 +20,22 @@ class TypedEvaluatorTest {
     private val rub = CurrencyCode("RUB")
     private val xyz = CurrencyCode("XYZ")
     private val rates = RateTable(
-        LocalDate.of(2026, 9, 25),
-        mapOf(usd to Num(BigDecimal("1")), eur to Num(BigDecimal("0.9")), rub to Num(BigDecimal("90")), CurrencyCode("THB") to Num(BigDecimal("36"))),
+        LocalDate(2026, 9, 25),
+        mapOf(usd to Num(Decimal("1")), eur to Num(Decimal("0.9")), rub to Num(Decimal("90")), CurrencyCode("THB") to Num(Decimal("36"))),
     )
     private val evaluator = TypedEvaluator()
 
     // Узлы собираем руками, span у всех нулевой, кроме тех, где проверяем ошибку.
     private val zero = Span(0, 0)
-    private fun n(v: String, span: Span = zero) = Node.Number(Num(BigDecimal(v)), span)
+    private fun n(v: String, span: Span = zero) = Node.Number(Num(Decimal(v)), span)
     private fun money(v: String, code: CurrencyCode) = Node.WithCurrency(n(v), code, zero)
     private fun pct(v: String) = Node.Percent(n(v), zero)
     private fun bin(l: Node, op: Operation, r: Node, span: Span = zero) = Node.Binary(l, op, r, span)
     private fun eval(node: Node) = evaluator.eval(node, rates)
 
-    /** Сравнение до 10 знаков: кросс-курсы считаются с округлением, а BigDecimal.equals учитывает scale. */
-    private fun close(v: String) = BigDecimal(v).setScale(10, RoundingMode.HALF_UP)
-    private fun Num.round() = value.setScale(10, RoundingMode.HALF_UP)
+    /** Сравнение до 10 знаков: кросс-курсы считаются с округлением, а Decimal.equals учитывает scale. */
+    private fun close(v: String) = Decimal(v).rounded(10)
+    private fun Num.round() = value.rounded(10)
 
     private fun assertNumber(expected: String, actual: Value) {
         assertTrue("ожидалось Number, вышло $actual", actual is Value.Number)
@@ -69,7 +68,7 @@ class TypedEvaluatorTest {
         assertMoney("30", eur, eval(bin(money("120", eur), Operation.Minus, money("100", usd))))
 
     @Test fun `100 usd + 10 usd без обращения к курсам`() {
-        val empty = RateTable(LocalDate.of(2026, 9, 25), emptyMap())
+        val empty = RateTable(LocalDate(2026, 9, 25), emptyMap())
         val v = evaluator.eval(bin(money("100", usd), Operation.Plus, money("10", usd)), empty)
         assertMoney("110", usd, v)
     }
@@ -126,9 +125,24 @@ class TypedEvaluatorTest {
     @Test fun `-10 usd`() =
         assertMoney("-10", usd, eval(Node.Negate(money("10", usd), zero)))
 
-    @Test fun `100 usd + 10 - ошибка`() {
-        val span = Span(0, 10)
-        assertFails(CalcError.MixedNumberMoney, span, bin(money("100", usd), Operation.Plus, n("10"), span))
+    @Test fun `10 + 100 usd - ошибка`() {
+        val span = Span(0, 12)
+        assertFails(CalcError.MixedNumberMoney, span, bin(n("10"), Operation.Plus, money("100", usd), span))
+    }
+
+    @Test fun `100 usd + 10 в конце ввода - не закончено`() {
+        val node = bin(money("100", usd), Operation.Plus, n("10", Span(10, 12)), Span(0, 12))
+        try {
+            eval(node)
+            fail("ожидался Incomplete")
+        } catch (e: Stop) {
+            assertEquals(Calculation.Incomplete, e.outcome)
+        }
+    }
+
+    @Test fun `100 usd + 10 не в конце ввода - ошибка`() {
+        val inner = bin(money("100", usd), Operation.Plus, n("10", Span(10, 12)), Span(1, 12))
+        assertFails(CalcError.MixedNumberMoney, Span(1, 12), bin(inner, Operation.Multiply, n("2"), Span(0, 17)))
     }
 
     @Test fun `usd умн eur - ошибка`() {

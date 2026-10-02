@@ -2,15 +2,15 @@ package com.zemlianikin.currency.ui
 
 import com.zemlianikin.currency.calc.Value
 import com.zemlianikin.currency.core.CurrencyCode
+import com.zemlianikin.currency.core.Decimal
 import com.zemlianikin.currency.core.Num
-import java.math.BigDecimal
-import java.util.Locale
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.util.Locale
 
 class ValueFormatterTest {
     private val en = ValueFormatter(Locale.US)
-    private fun num(s: String) = Num(BigDecimal(s))
+    private fun num(s: String) = Num(Decimal(s))
     private fun money(s: String, code: String) = Value.Money(num(s), CurrencyCode(code))
 
     @Test

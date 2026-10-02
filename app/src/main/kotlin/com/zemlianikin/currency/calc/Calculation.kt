@@ -3,11 +3,9 @@ package com.zemlianikin.currency.calc
 import com.zemlianikin.currency.core.CurrencyCode
 import com.zemlianikin.currency.core.Num
 
-// ГЕЙТ: менять только с разрешения пользователя.
 /** Символы [start, end) в строке ввода. Пустой span — позиция между символами. */
 data class Span(val start: Int, val end: Int)
 
-// ГЕЙТ: менять только с разрешения пользователя.
 /** Результат разбора и вычисления строки ввода. */
 sealed interface Calculation {
     /**
@@ -20,14 +18,13 @@ sealed interface Calculation {
         val currencies: Set<CurrencyCode>,
     ) : Calculation
 
-    /** Ввод можно дописать справа до валидного: `5 +`, `10 us`. */
+    /** Ввод можно дописать справа до валидного: `5 +`, `10 us`, `13 usd + 8`. */
     data object Incomplete : Calculation
 
     /** span — что подчеркнуть в тексте. */
     data class Failed(val error: CalcError, val span: Span) : Calculation
 }
 
-// ГЕЙТ: менять только с разрешения пользователя.
 /** Итоговое значение. Процент наружу не выходит — сворачивается в число. */
 sealed interface Value {
     /** 90 usd */
@@ -40,7 +37,6 @@ sealed interface Value {
     data class Ratio(val value: Num) : Value
 }
 
-// ГЕЙТ: менять только с разрешения пользователя.
 /** Причина ошибки. Текст сообщения живёт в ресурсах. */
 sealed interface CalcError {
     // Лексер
@@ -67,7 +63,7 @@ sealed interface CalcError {
 
     // Вычисление
 
-    /** Голое число и валюта в +/-: `100 usd + 10`. */
+    /** Голое число и валюта в +/-: `10 + 100 usd`, `(100 usd + 10) * 2`. */
     data object MixedNumberMoney : CalcError
 
     /** `usd * eur`, `(10 usd)(5 eur)`. */

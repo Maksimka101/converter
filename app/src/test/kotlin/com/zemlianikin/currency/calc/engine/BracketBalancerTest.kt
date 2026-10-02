@@ -2,8 +2,8 @@ package com.zemlianikin.currency.calc.engine
 
 import com.zemlianikin.currency.calc.Span
 import com.zemlianikin.currency.core.CurrencyCode
+import com.zemlianikin.currency.core.Decimal
 import com.zemlianikin.currency.core.Num
-import java.math.BigDecimal
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -22,7 +22,7 @@ class BracketBalancerTest {
                 c == ' ' -> { i++; continue }
                 c.isDigit() -> {
                     while (end < text.length && text[end].isDigit()) end++
-                    result += Token.Number(Num(BigDecimal(text.substring(i, end))), Span(i, end))
+                    result += Token.Number(Num(Decimal(text.substring(i, end))), Span(i, end))
                 }
                 c.isLetter() -> {
                     while (end < text.length && text[end].isLetter()) end++

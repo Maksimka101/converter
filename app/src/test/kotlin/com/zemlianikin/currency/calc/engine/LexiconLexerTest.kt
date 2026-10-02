@@ -11,7 +11,7 @@ import org.junit.Test
 class LexiconLexerTest {
     private val lexer = LexiconLexer()
 
-    // Токен одной строкой. Число нормализуем: BigDecimal.equals учитывает scale (4 ≠ 4.0).
+    // Токен одной строкой. Число нормализуем: Decimal.equals учитывает scale (4 ≠ 4.0).
     private fun show(token: Token): String = when (token) {
         is Token.Number -> "num ${token.value.value.stripTrailingZeros().toPlainString()}"
         is Token.Scale -> "scale ${token.factor.value.stripTrailingZeros().toPlainString()}"

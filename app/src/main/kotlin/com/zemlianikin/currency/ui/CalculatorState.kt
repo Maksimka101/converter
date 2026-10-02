@@ -18,9 +18,9 @@ import com.zemlianikin.currency.core.CurrencyCode
 import com.zemlianikin.currency.core.DecayingFrecency
 import com.zemlianikin.currency.core.Num
 import com.zemlianikin.currency.core.RateTable
-import java.time.Instant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
 
 /** Валидный результат и выражение, из которого он получен. */
 data class Shown(val expression: String, val ok: Calculation.Ok)
@@ -74,7 +74,7 @@ class CalculatorState(
         }
         if (frecency !== this.frecency) {
             this.frecency = frecency
-            scope.launch { ranking = frecency.ranking(Instant.now()) }
+            scope.launch { ranking = frecency.ranking(Clock.System.now()) }
         }
         recordUsed()
     }
@@ -129,7 +129,7 @@ class CalculatorState(
     private fun record(codes: Set<CurrencyCode>) {
         val frecency = frecency ?: return
         scope.launch {
-            val now = Instant.now()
+            val now = Clock.System.now()
             frecency.recordUsed(codes, now)
             ranking = frecency.ranking(now)
         }

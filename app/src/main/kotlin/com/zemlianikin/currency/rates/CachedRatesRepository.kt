@@ -7,8 +7,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.time.Clock
-import java.time.Duration
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
 
 /**
  * [RatesRepository] поверх [RatesProvider] и [RatesCache].
@@ -21,8 +22,8 @@ import java.time.Duration
 class CachedRatesRepository(
     private val provider: RatesProvider,
     private val cache: RatesCache,
-    private val clock: Clock = Clock.systemUTC(),
-    private val maxAge: Duration = Duration.ofHours(24),
+    private val clock: Clock = Clock.System,
+    private val maxAge: Duration = 24.hours,
 ) : RatesRepository {
 
     private val mutex = Mutex()
@@ -87,7 +88,7 @@ class CachedRatesRepository(
             _state.update { it.copy(refreshing = false, failed = true) }
             return
         }
-        val fresh = CachedRates(snapshot, clock.instant())
+        val fresh = CachedRates(snapshot, clock.now())
         // Сбой записи не должен терять свежие курсы: в памяти они уже есть.
         try {
             cache.save(fresh)
@@ -100,7 +101,7 @@ class CachedRatesRepository(
 
     /** Курсы «из будущего» (часы переведены назад) тоже считаем устаревшими, иначе они не обновятся никогда. */
     private fun isStale(cached: CachedRates): Boolean {
-        val age = Duration.between(cached.fetchedAt, clock.instant())
-        return age.isNegative || age > maxAge
+        val age = clock.now() - cached.fetchedAt
+        return age.isNegative() || age > maxAge
     }
 }

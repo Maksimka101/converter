@@ -54,10 +54,11 @@ import com.zemlianikin.currency.calc.Value
 import com.zemlianikin.currency.core.CurrencyCode
 import com.zemlianikin.currency.core.DecayingFrecency
 import com.zemlianikin.currency.core.RateTable
+import com.zemlianikin.currency.core.today
 import com.zemlianikin.currency.rates.RatesState
-import java.time.LocalDate
-import java.time.temporal.ChronoUnit
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.daysUntil
 
 /**
  * Экран калькулятора, снизу вверх по ходу руки: ввод и кнопки у клавиатуры, над ними результат, выше — та же сумма
@@ -261,10 +262,10 @@ private fun ratesStatus(state: RatesState): String {
 
 /** Дата курсов словом: сегодня, вчера, позавчера; раньше (и «из будущего» при сбитых часах) — датой. */
 @Composable
-private fun ratesDay(date: LocalDate): String = when (ChronoUnit.DAYS.between(date, LocalDate.now())) {
-    0L -> stringResource(R.string.rates_day_today)
-    1L -> stringResource(R.string.rates_day_yesterday)
-    2L -> stringResource(R.string.rates_day_before_yesterday)
+private fun ratesDay(date: LocalDate): String = when (date.daysUntil(today())) {
+    0 -> stringResource(R.string.rates_day_today)
+    1 -> stringResource(R.string.rates_day_yesterday)
+    2 -> stringResource(R.string.rates_day_before_yesterday)
     else -> date.toString()
 }
 

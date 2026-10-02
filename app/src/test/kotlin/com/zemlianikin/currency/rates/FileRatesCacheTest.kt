@@ -1,8 +1,10 @@
 package com.zemlianikin.currency.rates
 
 import com.zemlianikin.currency.core.CurrencyCode
+import com.zemlianikin.currency.core.Decimal
 import com.zemlianikin.currency.core.Num
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -11,17 +13,15 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
-import java.math.BigDecimal
-import java.time.Instant
-import java.time.LocalDate
+import kotlin.time.Instant
 
 class FileRatesCacheTest {
     @get:Rule
     val tmp = TemporaryFolder()
 
     private fun rates(fetchedAt: Long = 1_700_000_000_123, vararg pairs: Pair<String, String>): CachedRates {
-        val map = pairs.associate { (c, v) -> CurrencyCode(c) to Num(BigDecimal(v)) }
-        return CachedRates(RatesSnapshot(LocalDate.of(2026, 9, 25), map), Instant.ofEpochMilli(fetchedAt))
+        val map = pairs.associate { (c, v) -> CurrencyCode(c) to Num(Decimal(v)) }
+        return CachedRates(RatesSnapshot(LocalDate(2026, 9, 25), map), Instant.fromEpochMilliseconds(fetchedAt))
     }
 
     private fun sample() = rates(
@@ -45,7 +45,7 @@ class FileRatesCacheTest {
         assertEquals(src.snapshot.date, back.snapshot.date)
         assertEquals(src.snapshot.currencies, back.snapshot.currencies)
         for ((code, num) in src.snapshot.perBase) {
-            // BigDecimal.equals учитывает scale: сравниваем строго, без compareTo.
+            // Decimal.equals учитывает scale: сравниваем строго, без compareTo.
             assertEquals(num.value, back.snapshot.perBase.getValue(code).value)
         }
     }
@@ -58,7 +58,7 @@ class FileRatesCacheTest {
         val second = rates(5, "USD" to "1", "GBP" to "0.75")
         cache.save(second)
         val back = cache.load()!!
-        assertEquals(Instant.ofEpochMilli(5), back.fetchedAt)
+        assertEquals(Instant.fromEpochMilliseconds(5), back.fetchedAt)
         assertEquals(listOf(CurrencyCode("USD"), CurrencyCode("GBP")), back.snapshot.currencies)
         assertEquals(listOf("rates.txt"), tmp.root.list()!!.toList())
     }

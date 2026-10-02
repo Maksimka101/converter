@@ -1,8 +1,8 @@
 package com.zemlianikin.currency.ui
 
 import com.zemlianikin.currency.calc.Value
+import com.zemlianikin.currency.core.Decimal
 import com.zemlianikin.currency.core.Num
-import java.math.BigDecimal
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale
@@ -24,14 +24,14 @@ class ValueFormatter(locale: Locale = Locale.getDefault()) {
     val decimalSeparator: String = symbols.decimalSeparator.toString()
 
     /** Сумма без кода валюты: всегда два знака после разделителя. */
-    fun amount(amount: Num): String = money.format(amount.value)
+    fun amount(amount: Num): String = money.format(amount.value.java)
 
     fun value(value: Value): String = when (value) {
         is Value.Money -> "${amount(value.amount)} ${value.currency.code}"
-        is Value.Number -> number.format(value.value.value)
+        is Value.Number -> number.format(value.value.value.java)
         is Value.Ratio -> {
-            val change = value.value.value.subtract(BigDecimal.ONE).multiply(BigDecimal(100))
-            "×${ratio.format(value.value.value)} (${if (change.signum() >= 0) "+" else ""}${percent.format(change)}%)"
+            val change = (value.value.value - Decimal.ONE) * Decimal.of(100)
+            "×${ratio.format(value.value.value.java)} (${if (change.signum() >= 0) "+" else ""}${percent.format(change.java)}%)"
         }
     }
 

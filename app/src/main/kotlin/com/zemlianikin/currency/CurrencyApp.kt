@@ -5,6 +5,7 @@ import com.zemlianikin.currency.rates.CachedRatesRepository
 import com.zemlianikin.currency.rates.FawazRatesProvider
 import com.zemlianikin.currency.rates.FileRatesCache
 import com.zemlianikin.currency.rates.RatesRepository
+import com.zemlianikin.currency.rates.httpGet
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -18,7 +19,7 @@ import java.io.File
  */
 class CurrencyApp : Application() {
     val ratesRepository: RatesRepository by lazy {
-        CachedRatesRepository(FawazRatesProvider(), FileRatesCache(File(filesDir, "rates.txt")))
+        CachedRatesRepository(FawazRatesProvider(get = ::httpGet), FileRatesCache(File(filesDir, "rates.txt")))
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)

@@ -4,6 +4,9 @@ kotlin = "2.4.20"
 composeBom = "2026.09.00"
 activityCompose = "1.13.0"
 junit = "4.13.2"
+kotlinxDatetime = "0.7.1"
+cmp = "1.12.1"
+cmpMaterial3 = "1.9.0"
 
 [libraries]
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
@@ -13,7 +16,16 @@ compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview"
 compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
 junit = { module = "junit:junit", version.ref = "junit" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
+cmp-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "cmp" }
+cmp-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "cmp" }
+cmp-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "cmp" }
+cmp-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "cmpMaterial3" }
+cmp-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "cmp" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+android-kmp-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "cmp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

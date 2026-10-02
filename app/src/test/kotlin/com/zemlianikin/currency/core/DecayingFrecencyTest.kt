@@ -1,13 +1,14 @@
 package com.zemlianikin.currency.core
 
+import com.zemlianikin.currency.data.localeSeed
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.time.Duration
-import java.time.Instant
 import java.util.Locale
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.startCoroutine
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Instant
 
 /** Стор в памяти не приостанавливается, поэтому корутина завершается синхронно — без kotlinx.coroutines. */
 private fun <T> runBlocking(block: suspend () -> T): T {
@@ -49,7 +50,7 @@ class DecayingFrecencyTest {
     @Test fun `score halves after half life`() = runBlocking {
         val store = MemoryStore()
         val f = frecency(store = store)
-        val later = t0.plus(Duration.ofDays(21))
+        val later = t0.plus(21.days)
         repeat(2) { f.recordUsed(setOf(CurrencyCode("RUB")), t0) } // RUB = 2.0 → 1.0 через полураспад
         repeat(3) { f.recordUsed(setOf(CurrencyCode("JPY")), later) } // JPY = 3.0, seed USD/EUR = 0.5
         assertEquals(codes("JPY", "RUB", "USD", "EUR"), f.ranking(later))

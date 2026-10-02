@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "currency-converter"
 include(":app")
+include(":shared")

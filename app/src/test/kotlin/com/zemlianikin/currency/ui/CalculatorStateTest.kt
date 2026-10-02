@@ -9,12 +9,12 @@ import com.zemlianikin.currency.core.CurrencyCode
 import com.zemlianikin.currency.core.CurrencyUsage
 import com.zemlianikin.currency.core.CurrencyUsageStore
 import com.zemlianikin.currency.core.DecayingFrecency
+import com.zemlianikin.currency.core.Decimal
 import com.zemlianikin.currency.core.Num
 import com.zemlianikin.currency.core.RateTable
-import java.math.BigDecimal
-import java.time.LocalDate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -34,7 +34,7 @@ class CalculatorStateTest {
 
     private fun codes(vararg c: String) = c.map(::CurrencyCode)
     private fun table(vararg perUsd: Pair<String, String>) =
-        RateTable(LocalDate.of(2026, 9, 25), perUsd.associate { (code, rate) -> CurrencyCode(code) to Num(BigDecimal(rate)) })
+        RateTable(LocalDate(2026, 9, 25), perUsd.associate { (code, rate) -> CurrencyCode(code) to Num(Decimal(rate)) })
 
     private val rates = table("USD" to "1", "EUR" to "0.9", "RUB" to "90")
     private val store = MemoryStore()
@@ -83,9 +83,9 @@ class CalculatorStateTest {
     @Test
     fun `new rates recalculate the result`() {
         type("10 usd to eur")
-        assertEquals(0, BigDecimal("9").compareTo(shownMoney().amount.value))
+        assertEquals(0, Decimal("9").compareTo(shownMoney().amount.value))
         state.bind(table("USD" to "1", "EUR" to "0.8"), frecency)
-        assertEquals(0, BigDecimal("8").compareTo(shownMoney().amount.value))
+        assertEquals(0, Decimal("8").compareTo(shownMoney().amount.value))
     }
 
     @Test
@@ -110,9 +110,9 @@ class CalculatorStateTest {
 
     @Test
     fun `conversions follow the ranking and skip the source and missing rates`() {
-        val money = Value.Money(Num(BigDecimal("10")), CurrencyCode("USD"))
+        val money = Value.Money(Num(Decimal("10")), CurrencyCode("USD"))
         val rows = conversions(money, codes("EUR", "USD", "THB", "RUB"), rates).toList()
         assertEquals(codes("EUR", "RUB"), rows.map { it.currency })
-        assertEquals(0, BigDecimal("900").compareTo(rows[1].amount.value))
+        assertEquals(0, Decimal("900").compareTo(rows[1].amount.value))
     }
 }

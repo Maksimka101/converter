@@ -1,8 +1,9 @@
 package com.zemlianikin.currency.core
 
-import java.time.Duration
-import java.time.Instant
-import java.util.Locale
+import kotlin.math.pow
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Instant
 
 /**
  * Frecency: `score·2^(-Δt/halfLife) + 1` на каждое использование, распад ленивый.
@@ -15,7 +16,7 @@ class DecayingFrecency(
     private val store: CurrencyUsageStore,
     private val known: List<CurrencyCode>,
     private val seed: List<CurrencyCode>,
-    private val halfLife: Duration = Duration.ofDays(21),
+    private val halfLife: Duration = 21.days,
 ) {
     /** [used] — различные валюты выражения, каждая засчитывается с весом 1. */
     suspend fun recordUsed(used: Set<CurrencyCode>, now: Instant) {
@@ -41,22 +42,7 @@ class DecayingFrecency(
 
     private fun scoreAt(usage: CurrencyUsage?, now: Instant): Double {
         if (usage == null) return 0.0
-        val elapsed = Duration.between(usage.updatedAt, now).toMillis().coerceAtLeast(0)
-        return usage.score * Math.pow(0.5, elapsed.toDouble() / halfLife.toMillis())
+        val elapsed = (now - usage.updatedAt).inWholeMilliseconds.coerceAtLeast(0)
+        return usage.score * 0.5.pow(elapsed.toDouble() / halfLife.inWholeMilliseconds)
     }
-}
-
-/**
- * Дефолты из локали: валюта, затем USD, EUR. Валюта — явная (`-u-cu-`), иначе страна из региона в настройках
- * телефона (`-u-rg-`, Android 14+), иначе страна самой локали.
- */
-fun localeSeed(locale: Locale): List<CurrencyCode> {
-    val local = try {
-        locale.getUnicodeLocaleType("cu")?.uppercase()
-            ?: locale.getUnicodeLocaleType("rg")?.take(2)?.let { java.util.Currency.getInstance(Locale("", it)).currencyCode }
-            ?: java.util.Currency.getInstance(locale).currencyCode
-    } catch (_: IllegalArgumentException) {
-        null // у локали нет страны
-    }
-    return listOfNotNull(local, "USD", "EUR").distinct().map(::CurrencyCode)
 }

@@ -12,12 +12,12 @@ import androidx.compose.ui.platform.LocalContext
 import com.zemlianikin.currency.calc.defaultCalculator
 import com.zemlianikin.currency.core.DecayingFrecency
 import com.zemlianikin.currency.core.RateTable
-import com.zemlianikin.currency.core.localeSeed
+import com.zemlianikin.currency.core.today
 import com.zemlianikin.currency.data.PrefsUsageStore
+import com.zemlianikin.currency.data.localeSeed
 import com.zemlianikin.currency.rates.RatesRepository
 import com.zemlianikin.currency.ui.CalculatorScreen
 import com.zemlianikin.currency.ui.CurrencyTheme
-import java.time.LocalDate
 import java.util.Locale
 
 class MainActivity : ComponentActivity() {
@@ -44,7 +44,7 @@ fun App(repository: RatesRepository) {
     val ratesState by repository.state.collectAsState()
     val snapshot = ratesState.cached?.snapshot
     // Курсов ещё нет — пустая таблица: калькулятор даст NoRate, а экран по ratesState покажет загрузку.
-    val rates = remember(snapshot) { snapshot?.toTable() ?: RateTable(LocalDate.now(), emptyMap()) }
+    val rates = remember(snapshot) { snapshot?.toTable() ?: RateTable(today(), emptyMap()) }
     val calculator = remember { defaultCalculator() }
     val context = LocalContext.current.applicationContext
     // Список валют frecency — из снимка; фиксируется при создании, поэтому ключ remember — набор валют:

@@ -1,10 +1,9 @@
 package com.zemlianikin.currency.rates
 
 import com.zemlianikin.currency.core.CurrencyCode
+import com.zemlianikin.currency.core.Decimal
 import com.zemlianikin.currency.core.Num
-import java.math.BigDecimal
-import java.time.LocalDate
-import java.time.format.DateTimeParseException
+import kotlinx.datetime.LocalDate
 
 /** Базовая валюта источника: в JSON курсы лежат в объекте `usd`. */
 private val BASE = CurrencyCode("USD")
@@ -16,7 +15,7 @@ private const val MAX_DEPTH = 64
  * Разбирает ответ fawazahmed0/exchange-api (`v1/currencies/usd.json`):
  * `{"date":"2026-09-25","usd":{"eur":0.86,"rub":82.5,"btc":8.7e-06,...}}`.
  *
- * Значения читаются в [BigDecimal] прямо из текста числа, без промежуточного Double.
+ * Значения читаются в [Decimal] прямо из текста числа, без промежуточного Double.
  * Коды приводятся к верхнему регистру; код не из `[A-Za-z0-9]`, значение не число
  * или `<= 0` — запись пропускается. Базы (USD) в списке может не быть — тогда она
  * добавляется с курсом 1. Неизвестные поля любой вложенности пропускаются.
@@ -64,7 +63,7 @@ fun parseRates(json: String): RatesSnapshot {
         rates
     } else {
         LinkedHashMap<CurrencyCode, Num>().apply {
-            put(BASE, Num(BigDecimal.ONE))
+            put(BASE, Num(Decimal.ONE))
             putAll(rates)
         }
     }
@@ -73,7 +72,7 @@ fun parseRates(json: String): RatesSnapshot {
 
 private fun parseDate(text: String): LocalDate = try {
     LocalDate.parse(text)
-} catch (e: DateTimeParseException) {
+} catch (e: IllegalArgumentException) {
     throw IllegalArgumentException("Неверная дата в поле date: \"$text\"", e)
 }
 
@@ -89,7 +88,7 @@ private fun readRates(p: JsonReader): Map<CurrencyCode, Num> {
         p.skipWs(); p.expect(':'); p.skipWs()
         val number = if (p.peekIsNumberStart()) p.readNumberToken() else null
         if (number == null) p.skipValue(1)
-        val value = number?.toBigDecimalOrNull()
+        val value = number?.let(Decimal::parseOrNull)
         if (value != null && value.signum() > 0 && key.isNotEmpty() && key.all(::isCodeChar)) {
             result[CurrencyCode(key.uppercase())] = Num(value)
         }

@@ -1,10 +1,10 @@
 package com.zemlianikin.currency.calc
 
 import com.zemlianikin.currency.core.CurrencyCode
+import com.zemlianikin.currency.core.Decimal
 import com.zemlianikin.currency.core.Num
 import com.zemlianikin.currency.core.RateTable
-import java.math.BigDecimal
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -15,9 +15,9 @@ class PipelineCalculatorTest {
 
     // 1 usd = 0.9 eur = 90 rub = 36 thb (цифры условные)
     private val rates = RateTable(
-        LocalDate.of(2026, 9, 25),
+        LocalDate(2026, 9, 25),
         mapOf("USD" to "1", "EUR" to "0.9", "RUB" to "90", "THB" to "36")
-            .map { (code, rate) -> CurrencyCode(code) to Num(BigDecimal(rate)) }.toMap(),
+            .map { (code, rate) -> CurrencyCode(code) to Num(Decimal(rate)) }.toMap(),
     )
 
     private fun ok(text: String): Calculation.Ok {
@@ -27,8 +27,8 @@ class PipelineCalculatorTest {
     }
 
     private fun assertNear(expected: String, actual: Num, text: String) {
-        val diff = BigDecimal(expected).subtract(actual.value).abs()
-        assertTrue("$text: ожидалось $expected, получено ${actual.value}", diff < BigDecimal("0.000001"))
+        val diff = (Decimal(expected) - actual.value).abs()
+        assertTrue("$text: ожидалось $expected, получено ${actual.value}", diff < Decimal("0.000001"))
     }
 
     private fun number(text: String, expected: String) {
@@ -126,10 +126,17 @@ class PipelineCalculatorTest {
         assertEquals(Calculation.Incomplete, calc.calculate("5 +", rates))
         assertEquals(Calculation.Incomplete, calc.calculate("10 usd to", rates))
         assertEquals(Calculation.Incomplete, calc.calculate("10 us", rates))
+        // Голое число после суммы в конце ввода ещё можно дописать: `8 eur`, `8%`.
+        assertEquals(Calculation.Incomplete, calc.calculate("13 usd + 8", rates))
+        assertEquals(Calculation.Incomplete, calc.calculate("13 usd - 8 ", rates))
+        assertEquals(Calculation.Incomplete, calc.calculate("13 usd + 8 * 2", rates))
+        assertEquals(Calculation.Incomplete, calc.calculate("2 * (13 usd + 8", rates))
     }
 
     @Test fun ошибки() {
-        assertEquals(CalcError.MixedNumberMoney, failed("100 usd + 10").error)
+        assertEquals(CalcError.MixedNumberMoney, failed("10 + 100 usd").error)
+        assertEquals(CalcError.MixedNumberMoney, failed("(100 usd + 10) * 2").error)
+        assertEquals(CalcError.MixedNumberMoney, failed("100 usd + 10 to eur").error)
         assertEquals(CalcError.MoneyTimesMoney, failed("usd * eur").error)
         assertEquals(CalcError.DivideByZero, failed("1 / 0").error)
         assertEquals(CalcError.MissingOperator, failed("10 usd 5").error)

@@ -106,7 +106,7 @@ class RecursiveDescentParser : Parser {
             else -> Node.Negate(inner, span)
         }
 
-        private operator fun Num.unaryMinus() = Num(value.negate())
+        private operator fun Num.unaryMinus() = Num(-value)
 
         private fun pct(): Node {
             val start = pos
@@ -134,7 +134,7 @@ class RecursiveDescentParser : Parser {
         private fun number(): Node.Number {
             val digits = t[pos++] as Token.Number
             val scale = (peek() as? Token.Scale)?.also { pos++ }
-            val value = if (scale == null) digits.value else Num(digits.value.value.multiply(scale.factor.value))
+            val value = if (scale == null) digits.value else Num(digits.value.value * scale.factor.value)
             return Node.Number(value, Span(digits.span.start, (scale ?: digits).span.end))
         }
 

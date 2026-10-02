@@ -15,6 +15,14 @@ android {
         versionName = "0.1"
     }
 
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+        }
+    }
+
     buildFeatures {
         compose = true
     }
@@ -25,11 +33,13 @@ kotlin {
 }
 
 dependencies {
+    implementation(project(":shared"))
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.material3)
     implementation(libs.compose.ui.tooling.preview)
     implementation(libs.activity.compose)
+    implementation(libs.kotlinx.datetime)
     debugImplementation(libs.compose.ui.tooling)
     testImplementation(libs.junit)
 }

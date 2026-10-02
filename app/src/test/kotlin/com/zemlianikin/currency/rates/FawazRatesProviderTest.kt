@@ -1,12 +1,12 @@
 package com.zemlianikin.currency.rates
 
+import com.zemlianikin.currency.core.Decimal
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertThrows
 import org.junit.Test
 import java.io.IOException
-import java.math.BigDecimal
 
 class FawazRatesProviderTest {
     private val ok = """{"date":"2026-09-25","usd":{"eur":0.86}}"""
@@ -15,7 +15,7 @@ class FawazRatesProviderTest {
         val calls = mutableListOf<String>()
         val p = FawazRatesProvider(listOf("a", "b"), get = { calls += it; ok })
         val s = p.fetch()
-        assertEquals(BigDecimal("0.86"), s.perBase.values.first { it.value != BigDecimal.ONE }.value)
+        assertEquals(Decimal("0.86"), s.perBase.values.first { it.value != Decimal.ONE }.value)
         assertEquals(listOf("a"), calls)
     }
 

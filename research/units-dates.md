@@ -19,7 +19,7 @@
 ## 2. Модель
 
 ```
-core/Measure.kt  (ГЕЙТ)
+core/Measure.kt
   sealed interface Measure { Currency(code) ; Physical(id) }      // id: "kg", "h", "c"
   enum Dimension { Currency, Length, Mass, Volume, Area, Temperature, Time, Data, Speed, ... }
 core/Catalog     (серый ящик, данные) id → dimension, factor к базе (BigDecimal из строки), offset
@@ -32,7 +32,7 @@ core/Catalog     (серый ящик, данные) id → dimension, factor к
   целое число месяцев/лет — календарное (`plusMonths`), дробное — по среднему.
 - Температура: `to` учитывает сдвиг (`25 c to f`); `+`/`-` только внутри одной единицы, смешанные — ошибка.
 
-Значения (`calc/Calculation.kt`, ГЕЙТ):
+Значения (`calc/Calculation.kt`):
 ```
 Value.Money(amount, CurrencyCode)          -- как сейчас, UI топ-N не ломаем
 Value.Quantity(amount, Measure.Physical)   -- новое: 3 kg, 72 h
@@ -62,7 +62,7 @@ Value.Moment(at: LocalDateTime, dateOnly)  -- новое: now - 3 days
 **Часы.** Калькулятор — чистая функция без состояния, `now` ей взять неоткуда. Как курсы, время
 приходит параметром: `Calculator.calculate(text, env: Env)`, `Env(rates: RateTable, now: ZonedDateTime)`.
 Тесты детерминированы. Результат — снимок на момент ввода, тиканья нет (пересчёт при правке/курсах).
-Изменение гейтов `Calculator`, `Evaluator` (см. §7).
+Меняются контракты `Calculator`, `Evaluator` (см. §7).
 
 Не сейчас: пояса (`now to tokyo`; имена городов на RU — большой словарь, `android.icu` в `core` нельзя),
 `next friday`, `в 9:00` (`в` уже = `to`), цепочки `1h 30m`, разница в «3 месяца 7 дней».
@@ -116,7 +116,7 @@ Value.Moment(at: LocalDateTime, dateOnly)  -- новое: now - 3 days
 - **Топ-N и frecency по измерениям.** Идея frecency для валют переносится: `3 kg` сразу показывает mg, g, lb, oz… — рейтинг
   единиц того же измерения. Засев по локали: метрика/имперка (`Locale.getDefault()`), температура C/F.
   Frecency хранит счёт по ключу `Measure` (одно хранилище, ключ — строка), `ranking(dimension)`.
-  Гейты `CurrencyFrecency`/`CurrencyUsage` обобщаются в `MeasureFrecency`.
+  `CurrencyFrecency`/`CurrencyUsage` обобщаются в `MeasureFrecency`.
 - `Conversions` сейчас считает строки из `RateTable` прямо в composable (`ui/CalculatorScreen.kt`). Вынести в
   чистую функцию `alternatives(value, ranking, env): List<Value>` — тестируется на JVM, UI только рисует.
 - Моменты: одна крупная карточка + пара карточек (день недели, ISO). Длительность — карточки единиц времени.
@@ -125,7 +125,7 @@ Value.Moment(at: LocalDateTime, dateOnly)  -- новое: now - 3 days
 - Формат чисел (`format(…, maxFraction)`, временный): у мер нет «знаков валюты», нужна таблица знаков на
   измерение или значащие цифры — решается вместе с форматированием чисел.
 
-## 7. Гейты, которые придётся менять (нужно разрешение)
+## 7. Контракты, которые придётся менять
 - `calc/Calculation.kt`: `Value` (+`Quantity`, `Moment`), `Calculation.Ok.currencies`→`measures`, `CalcError` (+3).
 - `calc/Calculator.kt`, `calc/engine/Stages.kt` (`Evaluator`): `rates` → `env`.
 - `core/Rates.kt` не меняется; новый `core/Measure.kt`, `Env`.
@@ -140,9 +140,9 @@ Value.Moment(at: LocalDateTime, dateOnly)  -- новое: now - 3 days
 3. **Литералы дат** (`31 dec`, `2026-12-31`, `14:30`), `Moment − Moment`.
 4. Позже: пояса, `next friday`, `1h 30m`, составные единицы (вектор степеней), `km/h`.
 
-Шаг 1 не трогает часы и `Moment` — гейты `Env` и `Moment` меняются только на шаге 2.
+Шаг 1 не трогает часы и `Moment` — `Env` и `Moment` появляются только на шаге 2.
 
 ## 9. Открытые вопросы к пользователю
 1. `m`/`м` убрать из множителей в пользу метра? (рекомендация: да, `млн`/`mln` остаются)
 2. Неоднозначные слова (`фунт`, `ton`, `gallon`) — строго запрещать, как `kr`, или выбрать одно значение по умолчанию?
-3. Обобщать frecency (гейты) сразу или на первом шаге оставить валюты, а меры ранжировать по засеву?
+3. Обобщать frecency сразу или на первом шаге оставить валюты, а меры ранжировать по засеву?

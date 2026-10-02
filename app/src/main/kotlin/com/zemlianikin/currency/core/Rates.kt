@@ -1,9 +1,7 @@
 package com.zemlianikin.currency.core
 
-import java.math.MathContext
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
-// ГЕЙТ: менять только с разрешения пользователя.
 /**
  * Снимок курсов на дату. perBase — сколько единиц валюты дают за 1 базовую,
  * сама база лежит в таблице с курсом 1. Кросс-курс считается через базу.
@@ -13,6 +11,6 @@ class RateTable(val date: LocalDate, private val perBase: Map<CurrencyCode, Num>
     fun rate(from: CurrencyCode, to: CurrencyCode): Num? {
         val f = perBase[from] ?: return null
         val t = perBase[to] ?: return null
-        return Num(t.value.divide(f.value, MathContext.DECIMAL128))
+        return Num(t.value / f.value)
     }
 }

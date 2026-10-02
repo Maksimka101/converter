@@ -3,9 +3,8 @@ package com.zemlianikin.currency.calc.engine
 // Серый ящик: словарь лексера. Данные, а не код: RU и EN слиты, склонения перечислены явно.
 
 import com.zemlianikin.currency.core.CurrencyCode
+import com.zemlianikin.currency.core.Decimal
 import com.zemlianikin.currency.core.Num
-import java.math.BigDecimal
-import java.util.Locale
 
 /**
  * Слово (в нижнем регистре) → что оно значит. Слова разных категорий и языков не пересекаются:
@@ -36,17 +35,17 @@ class Lexicon private constructor(private val words: Map<String, Meaning>) {
     private val prefixes: Set<String> =
         words.keys.flatMap { word -> (1 until word.length).map { word.take(it) } }.toSet()
 
-    fun meaning(word: String): Meaning? = words[word.lowercase(Locale.ROOT)]
+    fun meaning(word: String): Meaning? = words[word.lowercase()]
 
     /** Слово — собственный префикс какого-то слова словаря. */
-    fun canExtend(word: String): Boolean = word.lowercase(Locale.ROOT) in prefixes
+    fun canExtend(word: String): Boolean = word.lowercase() in prefixes
 
     /**
      * Валюты, у которых есть слово, начинающееся с [prefix] (`us` → USD). Неоднозначное слово даёт все свои
      * варианты. Порядок не значим: сортировку (например, по frecency) делает вызывающий.
      */
     fun currenciesWithPrefix(prefix: String): List<CurrencyCode> {
-        val start = prefix.lowercase(Locale.ROOT)
+        val start = prefix.lowercase()
         return words.filterKeys { it.startsWith(start) }.values.flatMap { meaning ->
             when (meaning) {
                 is Meaning.Currency -> listOf(meaning.code)
@@ -61,7 +60,7 @@ class Lexicon private constructor(private val words: Map<String, Meaning>) {
 
         fun currency(code: String, vararg names: String) {
             val meaning = Meaning.Currency(CurrencyCode(code))
-            add(code.lowercase(Locale.ROOT), meaning)
+            add(code.lowercase(), meaning)
             names.forEach { add(it, meaning) }
         }
 
@@ -71,7 +70,7 @@ class Lexicon private constructor(private val words: Map<String, Meaning>) {
         }
 
         fun scale(factor: Long, vararg names: String) {
-            val meaning = Meaning.Scale(Num(BigDecimal.valueOf(factor)))
+            val meaning = Meaning.Scale(Num(Decimal.of(factor)))
             names.forEach { add(it, meaning) }
         }
 
@@ -84,7 +83,7 @@ class Lexicon private constructor(private val words: Map<String, Meaning>) {
         fun of(vararg names: String) = names.forEach { add(it, Meaning.Of) }
 
         private fun add(word: String, meaning: Meaning) {
-            require(word == word.lowercase(Locale.ROOT)) { "Слово '$word' должно быть в нижнем регистре" }
+            require(word == word.lowercase()) { "Слово '$word' должно быть в нижнем регистре" }
             require(word.length == 1 || word.all(::isWordChar)) {
                 "Слово '$word' должно состоять из букв и '$' (символы валют — по одному знаку)"
             }

@@ -1,51 +1,51 @@
 package com.zemlianikin.currency.rates
 
 import com.zemlianikin.currency.core.CurrencyCode
+import com.zemlianikin.currency.core.Decimal
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.math.BigDecimal
-import java.time.LocalDate
 
 class RatesJsonTest {
     private fun RatesSnapshot.rate(code: String) = perBase[CurrencyCode(code)]?.value
 
     @Test fun `обычный ответ`() {
         val s = parseRates("""{"date":"2026-09-25","usd":{"usd":1,"eur":0.86,"rub":82.5}}""")
-        assertEquals(LocalDate.of(2026, 9, 25), s.date)
-        assertEquals(BigDecimal("0.86"), s.rate("EUR"))
-        assertEquals(BigDecimal("82.5"), s.rate("RUB"))
+        assertEquals(LocalDate(2026, 9, 25), s.date)
+        assertEquals(Decimal("0.86"), s.rate("EUR"))
+        assertEquals(Decimal("82.5"), s.rate("RUB"))
         assertEquals(listOf("USD", "EUR", "RUB"), s.currencies.map { it.code })
     }
 
     @Test fun `пробелы и переводы строк`() {
         val s = parseRates("\n{ \"date\" : \"2026-09-25\" ,\r\n \"usd\" : { \"eur\" : 0.5 } }\n")
-        assertEquals(BigDecimal("0.5"), s.rate("EUR"))
+        assertEquals(Decimal("0.5"), s.rate("EUR"))
     }
 
     @Test fun `база добавляется с курсом 1 первой`() {
         val s = parseRates("""{"date":"2026-09-25","usd":{"eur":0.86}}""")
-        assertEquals(BigDecimal.ONE, s.rate("USD"))
+        assertEquals(Decimal.ONE, s.rate("USD"))
         assertEquals("USD", s.currencies.first().code)
     }
 
     @Test fun `база из ответа не перезаписывается`() {
         val s = parseRates("""{"date":"2026-09-25","usd":{"usd":1.0,"eur":0.86}}""")
-        assertEquals(BigDecimal("1.0"), s.rate("USD"))
+        assertEquals(Decimal("1.0"), s.rate("USD"))
     }
 
     @Test fun `экспонента`() {
         val s = parseRates("""{"date":"2026-09-25","usd":{"xyz":1.2e-05,"big":3E+2,"btc":8.7E-6}}""")
-        assertEquals(0, BigDecimal("0.000012").compareTo(s.rate("XYZ")))
-        assertEquals(0, BigDecimal("300").compareTo(s.rate("BIG")))
-        assertEquals(0, BigDecimal("0.0000087").compareTo(s.rate("BTC")))
+        assertEquals(0, Decimal("0.000012").compareTo(s.rate("XYZ")!!))
+        assertEquals(0, Decimal("300").compareTo(s.rate("BIG")!!))
+        assertEquals(0, Decimal("0.0000087").compareTo(s.rate("BTC")!!))
     }
 
-    @Test fun `точность BigDecimal не теряется`() {
+    @Test fun `точность Decimal не теряется`() {
         val text = "0.12345678901234567890123456789"
         val s = parseRates("""{"date":"2026-09-25","usd":{"eur":$text}}""")
-        assertEquals(BigDecimal(text), s.rate("EUR"))
+        assertEquals(Decimal(text), s.rate("EUR"))
     }
 
     @Test fun `коды переводятся в верхний регистр`() {
@@ -70,17 +70,17 @@ class RatesJsonTest {
             """{"meta":{"a":[1,{"b":"}\"{"},null,true,-1.5e3],"c":{}},"date":"2026-09-25",
                "list":[],"usd":{"eur":0.86},"tail":[[[]]]}"""
         )
-        assertEquals(BigDecimal("0.86"), s.rate("EUR"))
+        assertEquals(Decimal("0.86"), s.rate("EUR"))
     }
 
     @Test fun `escape в ключах и значениях`() {
         val s = parseRates("""{"date":"2026-09-25","note":"a\nb\\\/","usd":{"eur":0.86}}""")
-        assertEquals(BigDecimal("0.86"), s.rate("EUR"))
+        assertEquals(Decimal("0.86"), s.rate("EUR"))
     }
 
     @Test fun `дубликат кода - побеждает последний`() {
         val s = parseRates("""{"date":"2026-09-25","usd":{"eur":1,"EUR":2}}""")
-        assertEquals(BigDecimal("2"), s.rate("EUR"))
+        assertEquals(Decimal("2"), s.rate("EUR"))
     }
 
     @Test fun `пустой usd - только база`() {
@@ -90,7 +90,7 @@ class RatesJsonTest {
 
     @Test fun `toTable считает кросс-курс`() {
         val t = parseRates("""{"date":"2026-09-25","usd":{"eur":0.5,"rub":100}}""").toTable()
-        assertEquals(0, BigDecimal("200").compareTo(t.rate(CurrencyCode("EUR"), CurrencyCode("RUB"))!!.value))
+        assertEquals(0, Decimal("200").compareTo(t.rate(CurrencyCode("EUR"), CurrencyCode("RUB"))!!.value))
     }
 
     private fun bad(json: String, contains: String? = null) {

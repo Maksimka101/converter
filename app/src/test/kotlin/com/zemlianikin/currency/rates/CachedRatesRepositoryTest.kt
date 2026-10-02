@@ -1,11 +1,13 @@
 package com.zemlianikin.currency.rates
 
 import com.zemlianikin.currency.core.CurrencyCode
+import com.zemlianikin.currency.core.Decimal
 import com.zemlianikin.currency.core.Num
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -14,20 +16,16 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
 import java.io.IOException
-import java.math.BigDecimal
-import java.time.Clock
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.ZoneOffset
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 
 class CachedRatesRepositoryTest {
 
-    private class FakeClock(var now: Instant) : Clock() {
-        override fun getZone(): ZoneId = ZoneOffset.UTC
-        override fun withZone(zone: ZoneId): Clock = this
-        override fun instant(): Instant = now
+    private class FakeClock(var now: Instant) : Clock {
+        override fun now(): Instant = now
     }
 
     private class FakeProvider(var action: suspend (Int) -> RatesSnapshot) : RatesProvider {
@@ -57,8 +55,8 @@ class CachedRatesRepositoryTest {
     private val clock = FakeClock(t0)
 
     private fun snap(rub: String = "82.5") = RatesSnapshot(
-        LocalDate.of(2026, 9, 25),
-        mapOf(CurrencyCode("USD") to Num(BigDecimal.ONE), CurrencyCode("RUB") to Num(BigDecimal(rub))),
+        LocalDate(2026, 9, 25),
+        mapOf(CurrencyCode("USD") to Num(Decimal.ONE), CurrencyCode("RUB") to Num(Decimal(rub))),
     )
 
     private fun cached(age: Duration, rub: String = "70") = CachedRates(snap(rub), t0.minus(age))
@@ -92,7 +90,7 @@ class CachedRatesRepositoryTest {
     @Test
     fun `fresh cache is used without fetch`() = runBlocking {
         val p = provider()
-        val stored = cached(Duration.ofHours(1))
+        val stored = cached(1.hours)
         val r = repo(p, FakeCache(stored))
         r.refreshIfStale()
         assertEquals(0, p.calls)
@@ -102,7 +100,7 @@ class CachedRatesRepositoryTest {
     @Test
     fun `cache exactly maxAge old is still fresh`() = runBlocking {
         val p = provider()
-        val r = repo(p, FakeCache(cached(Duration.ofHours(24))))
+        val r = repo(p, FakeCache(cached(24.hours)))
         r.refreshIfStale()
         assertEquals(0, p.calls)
     }
@@ -110,18 +108,18 @@ class CachedRatesRepositoryTest {
     @Test
     fun `stale cache is refreshed`() = runBlocking {
         val p = provider("99")
-        val c = FakeCache(cached(Duration.ofHours(25)))
+        val c = FakeCache(cached(25.hours))
         val r = repo(p, c)
         r.refreshIfStale()
         assertEquals(1, p.calls)
         assertEquals(t0, r.state.value.cached!!.fetchedAt)
-        assertEquals(BigDecimal("99"), r.state.value.cached!!.snapshot.perBase.getValue(CurrencyCode("RUB")).value)
+        assertEquals(Decimal("99"), r.state.value.cached!!.snapshot.perBase.getValue(CurrencyCode("RUB")).value)
     }
 
     @Test
     fun `cache from the future is treated as stale`() = runBlocking {
         val p = provider()
-        val r = repo(p, FakeCache(cached(Duration.ofHours(-3))))
+        val r = repo(p, FakeCache(cached((-3).hours)))
         r.refreshIfStale()
         assertEquals(1, p.calls)
     }
@@ -129,14 +127,14 @@ class CachedRatesRepositoryTest {
     @Test
     fun `custom maxAge and clock are respected`() = runBlocking {
         val p = provider()
-        val c = FakeCache(cached(Duration.ofMinutes(10)))
-        val r = CachedRatesRepository(p, c, clock, Duration.ofMinutes(5))
+        val c = FakeCache(cached(10.minutes))
+        val r = CachedRatesRepository(p, c, clock, 5.minutes)
         r.refreshIfStale()
         assertEquals(1, p.calls)
-        clock.now = t0.plus(Duration.ofMinutes(4))
+        clock.now = t0.plus(4.minutes)
         r.refreshIfStale()
         assertEquals(1, p.calls)
-        clock.now = t0.plus(Duration.ofMinutes(6))
+        clock.now = t0.plus(6.minutes)
         r.refreshIfStale()
         assertEquals(2, p.calls)
         assertEquals(clock.now, r.state.value.cached!!.fetchedAt)
@@ -144,7 +142,7 @@ class CachedRatesRepositoryTest {
 
     @Test
     fun `network failure keeps old cache and sets failed`() = runBlocking {
-        val stored = cached(Duration.ofHours(30))
+        val stored = cached(30.hours)
         val c = FakeCache(stored)
         val r = repo(failing(), c)
         r.refreshIfStale()
@@ -197,7 +195,7 @@ class CachedRatesRepositoryTest {
     @Test
     fun `refresh always fetches`() = runBlocking {
         val p = provider()
-        val r = repo(p, FakeCache(cached(Duration.ofMinutes(1))))
+        val r = repo(p, FakeCache(cached(1.minutes)))
         r.refresh()
         assertEquals(1, p.calls)
         r.refresh()
@@ -206,7 +204,7 @@ class CachedRatesRepositoryTest {
 
     @Test
     fun `refresh before refreshIfStale keeps cached on failure`() = runBlocking {
-        val stored = cached(Duration.ofHours(1))
+        val stored = cached(1.hours)
         val r = repo(failing(), FakeCache(stored))
         r.refresh()
         assertEquals(RatesState(stored, refreshing = false, failed = true), r.state.value)
@@ -214,7 +212,7 @@ class CachedRatesRepositoryTest {
 
     @Test
     fun `repeated refreshIfStale does not reread cache`() = runBlocking {
-        val c = FakeCache(cached(Duration.ofHours(1)))
+        val c = FakeCache(cached(1.hours))
         val p = provider()
         val r = repo(p, c)
         r.refreshIfStale()
@@ -239,7 +237,7 @@ class CachedRatesRepositoryTest {
         val gate = CompletableDeferred<Unit>()
         val started = CompletableDeferred<Unit>()
         val p = FakeProvider { started.complete(Unit); gate.await(); snap() }
-        val r = repo(p, FakeCache(cached(Duration.ofHours(30))))
+        val r = repo(p, FakeCache(cached(30.hours)))
         val job = launch { r.refreshIfStale() }
         started.await()
         assertTrue(r.state.value.refreshing)
@@ -279,7 +277,7 @@ class CachedRatesRepositoryTest {
 
     @Test
     fun `cancellation keeps repository usable`() = runBlocking {
-        val stored = cached(Duration.ofHours(30))
+        val stored = cached(30.hours)
         val p = FakeProvider { n -> if (n == 1) throw CancellationException("x") else snap() }
         val r = repo(p, FakeCache(stored))
         try {

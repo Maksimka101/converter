@@ -4,8 +4,8 @@ import com.zemlianikin.currency.calc.CalcError
 import com.zemlianikin.currency.calc.Calculation
 import com.zemlianikin.currency.calc.Span
 import com.zemlianikin.currency.core.CurrencyCode
+import com.zemlianikin.currency.core.Decimal
 import com.zemlianikin.currency.core.Num
-import java.math.BigDecimal
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -24,8 +24,8 @@ class RecursiveDescentParserTest {
 
         fun tight() { at-- }
         fun n(value: Int) = n(value.toString())
-        fun n(text: String) = add(text.length) { Token.Number(Num(BigDecimal(text)), it) }
-        fun scale(factor: Int) = add(1) { Token.Scale(Num(BigDecimal(factor)), it) }
+        fun n(text: String) = add(text.length) { Token.Number(Num(Decimal(text)), it) }
+        fun scale(factor: Int) = add(1) { Token.Scale(Num(Decimal.of(factor.toLong())), it) }
         fun cur(code: String, text: String = code) = add(text.length) { Token.Currency(CurrencyCode(code.uppercase()), it) }
         fun plus() = add(1) { Token.Operator(Operation.Plus, it) }
         fun minus() = add(1) { Token.Operator(Operation.Minus, it) }
@@ -117,7 +117,7 @@ class RecursiveDescentParserTest {
 
     @Test fun `scale multiplies number and extends span`() {
         val node = parser.parse(tokens { n("1.5"); scale(1000) })
-        assertEquals(0, BigDecimal(1500).compareTo((node as Node.Number).value.value))
+        assertEquals(0, Decimal("1500").compareTo((node as Node.Number).value.value))
         assertEquals(Span(0, 5), node.span)
     }
 
