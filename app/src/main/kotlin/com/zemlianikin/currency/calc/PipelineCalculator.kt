@@ -12,7 +12,7 @@ import com.zemlianikin.currency.calc.engine.Token
 import com.zemlianikin.currency.calc.engine.TypedEvaluator
 import com.zemlianikin.currency.core.RateTable
 
-/** Конвейер #3: Lexer → Balancer → Parser → Evaluator. Stop любого этапа становится результатом. */
+/** Конвейер: Lexer → Balancer → Parser → Evaluator. Stop любого этапа становится результатом. */
 class PipelineCalculator(
     private val lexer: Lexer,
     private val balancer: Balancer,

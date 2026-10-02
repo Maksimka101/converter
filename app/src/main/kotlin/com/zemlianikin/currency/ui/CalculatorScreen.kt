@@ -74,22 +74,22 @@ import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * PoC: поле ввода сверху, результат под ним, ниже — та же сумма во всех остальных валютах в порядке frecency.
- * Пересчёт при каждом изменении текста или курсов. Отступление от #8 (ради PoC): валюты засчитываются
- * сразу, как только во вводе появился новый набор.
- * [ratesState] — откуда курсы и что с ними (#15): по нему футер и «загружаем курсы» вместо ошибки «нет курса».
+ * Пересчёт при каждом изменении текста или курсов. Упрощение ради PoC: валюты засчитываются
+ * сразу, как только во вводе появился новый набор, а не по завершении выражения.
+ * [ratesState] — откуда курсы и что с ними: по нему футер и «загружаем курсы» вместо ошибки «нет курса».
  */
 @OptIn(FlowPreview::class)
 @Composable
 fun CalculatorScreen(calculator: Calculator, rates: RateTable, ratesState: RatesState, frecency: CurrencyFrecency) {
     var input by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue()) }
     val text = input.text
-    // Курсов ещё нет, но грузим: NoRate тут не ошибка ввода (#15).
+    // Курсов ещё нет, но грузим: NoRate тут не ошибка ввода.
     val loadingRates = ratesState.cached == null && ratesState.refreshing
     val result = remember(text, rates) { calculator.calculate(text, rates) }
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { focus.requestFocus() }
 
-    // Режим numpad (#13): свои кнопки вместо системной клавиатуры, последний режим запоминается.
+    // Режим numpad: свои кнопки вместо системной клавиатуры, последний режим запоминается.
     val prefs = LocalContext.current.getSharedPreferences("ui", Context.MODE_PRIVATE)
     var numpad by rememberSaveable { mutableStateOf(prefs.getBoolean("numpad", false)) }
     val keyboard = LocalSoftwareKeyboardController.current
@@ -98,7 +98,7 @@ fun CalculatorScreen(calculator: Calculator, rates: RateTable, ratesState: Rates
         if (numpad) keyboard?.hide() else keyboard?.show()
     }
 
-    // Экран не прыгает при смене режима (#13): в numpad вместо клавиатуры блок её высоты, а пока клавиатура
+    // Экран не прыгает при смене режима: в numpad вместо клавиатуры блок её высоты, а пока клавиатура
     // выезжает обратно, место под неё уже зарезервировано.
     val keyboardHeight = rememberKeyboardHeight()
     val density = LocalDensity.current
@@ -132,7 +132,7 @@ fun CalculatorScreen(calculator: Calculator, rates: RateTable, ratesState: Rates
 
     // Один набор валют засчитывается один раз, пока ввод не очистят.
     var recorded by remember { mutableStateOf<Set<CurrencyCode>?>(null) }
-    // Последний валидный результат и выражение, из которого он получен (#11): пока ввод невалиден, показываем
+    // Последний валидный результат и выражение, из которого он получен: пока ввод невалиден, показываем
     // его тусклым, а копирование берёт именно это выражение. Пустой ввод сбрасывает.
     var lastOk by remember { mutableStateOf<Shown?>(null) }
     val ok = result as? Calculation.Ok
@@ -167,7 +167,7 @@ fun CalculatorScreen(calculator: Calculator, rates: RateTable, ratesState: Rates
         if (numpad) suggestCurrencies(input, result, ranking) else Suggestions.None
     }
 
-    // Кнопка «+» рядом с чипами (#13): валюта по названию или стране вписывается в ввод и засчитывается во frecency.
+    // Кнопка «+» рядом с чипами: валюта по названию или стране вписывается в ввод и засчитывается во frecency.
     val directory = remember { CurrencyDirectory() }
     var picking by remember { mutableStateOf(false) }
     if (picking) {
@@ -240,7 +240,7 @@ fun CalculatorScreen(calculator: Calculator, rates: RateTable, ratesState: Rates
     }
 }
 
-/** Кнопка → набираемый текст. Ряд над системной клавиатурой, как extra-keys в Termux (#13). */
+/** Кнопка → набираемый текст. Ряд над системной клавиатурой, как extra-keys в Termux. */
 private val KEYS = listOf("+" to "+", "−" to "-", "×" to "*", "÷" to "/", "(" to "(", ")" to ")", "%" to "%", "to" to "to")
 
 /** Сколько карточек конвертаций считается и рисуется сразу и на сколько больше — при подходе к краю прокрутки. */
@@ -248,7 +248,7 @@ private const val CARDS_PAGE = 12
 private const val CARDS_LOAD_MARGIN_PX = 400
 
 /**
- * Сумма в валютах рейтинга (ленивая подгрузка по прокрутке), кроме валюты главной строки; безразмерный результат — без списка (#5).
+ * Сумма в валютах рейтинга (ленивая подгрузка по прокрутке), кроме валюты главной строки; безразмерный результат — без списка.
  * Главный результат — последняя карточка того же wrap.
  */
 @OptIn(ExperimentalLayoutApi::class)
@@ -263,7 +263,7 @@ private fun Conversions(
     modifier: Modifier,
 ) {
     val money = shown?.ok?.value as? Value.Money
-    // В рейтинге сотни валют (#15), считать и рисовать их все на каждое нажатие — лаг. Берём первые [count] по
+    // В рейтинге сотни валют, считать и рисовать их все на каждое нажатие — лаг. Берём первые [count] по
     // рейтингу, остальные подгружаются, когда прокрутка доходит до края. Пустой ввод сбрасывает подгруженное.
     var count by remember(money == null) { mutableIntStateOf(CARDS_PAGE) }
     val rows = remember(money, ranking, rates, count) {
@@ -331,7 +331,7 @@ private fun ResultText(
 /** Валидный результат и выражение, из которого он получен. */
 private data class Shown(val expression: String, val ok: Calculation.Ok)
 
-/** Строка над списком (#15): дата курсов, загрузка или сбой. */
+/** Строка над списком: дата курсов, загрузка или сбой. */
 @Composable
 private fun ratesFooter(state: RatesState): String {
     val cached = state.cached
@@ -369,7 +369,7 @@ private fun errorText(error: CalcError): String = when (error) {
     CalcError.NoRate -> stringResource(R.string.error_no_rate)
 }
 
-// Форматирование временное: точность и локаль решаются в #5.
+// Форматирование временное: таблицы знаков валюты и локали ещё нет.
 private fun formatValue(value: Value): String = when (value) {
     is Value.Money -> "${format(value.amount.value, 2)} ${value.currency.code}"
     is Value.Number -> format(value.value.value, 8)
@@ -382,7 +382,7 @@ private fun formatValue(value: Value): String = when (value) {
 private fun format(number: BigDecimal, maxFraction: Int): String {
     val minFraction = if (maxFraction == 2) 2 else 0
     val pattern = "#,##0." + "0".repeat(minFraction) + "#".repeat(maxFraction - minFraction)
-    // Разряды пробелом, как в вводе (#5, #13), но неразрывным: число не рвётся при переносе карточки. Лексер
+    // Разряды пробелом, как в вводе, но неразрывным: число не рвётся при переносе карточки. Лексер
     // принимает его как группировку, поэтому результат можно скопировать и вставить обратно.
     val symbols = DecimalFormatSymbols(java.util.Locale.getDefault()).apply { groupingSeparator = '\u00A0' }
     return DecimalFormat(pattern, symbols).format(number)

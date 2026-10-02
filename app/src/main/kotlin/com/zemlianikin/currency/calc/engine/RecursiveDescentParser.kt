@@ -6,7 +6,7 @@ import com.zemlianikin.currency.calc.Span
 import com.zemlianikin.currency.core.Num
 
 /**
- * Recursive descent без отката (#3). Вход — токены с парными скобками (#5), скобки в дерево не попадают.
+ * Recursive descent без отката. Вход — токены с парными скобками, скобки в дерево не попадают.
  * ```
  * line    = expr { To Currency [ tail ] }     -- `to` конвертирует всё, что слева в этой группе
  * tail    = продолжение expr, где левый операнд — уже конвертированное: `10 usd to eur * 10`

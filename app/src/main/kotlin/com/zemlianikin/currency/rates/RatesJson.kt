@@ -13,7 +13,7 @@ private val BASE = CurrencyCode("USD")
 private const val MAX_DEPTH = 64
 
 /**
- * Разбирает ответ fawazahmed0/exchange-api (`v1/currencies/usd.json`) (#15):
+ * Разбирает ответ fawazahmed0/exchange-api (`v1/currencies/usd.json`):
  * `{"date":"2026-09-25","usd":{"eur":0.86,"rub":82.5,"btc":8.7e-06,...}}`.
  *
  * Значения читаются в [BigDecimal] прямо из текста числа, без промежуточного Double.

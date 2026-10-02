@@ -19,7 +19,7 @@ class RatesSnapshot(val date: LocalDate, val perBase: Map<CurrencyCode, Num>) {
 }
 
 // ГЕЙТ: менять только с разрешения пользователя.
-/** Источник курсов (#15). Один запрос — вся таблица. При сбое бросает исключение (сеть, формат). */
+/** Источник курсов. Один запрос — вся таблица. При сбое бросает исключение (сеть, формат). */
 interface RatesProvider {
     suspend fun fetch(): RatesSnapshot
 }

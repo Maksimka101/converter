@@ -1,6 +1,6 @@
 package com.zemlianikin.currency.calc.engine
 
-// Серый ящик: лексер по словарю (#3, #5).
+// Серый ящик: лексер по словарю.
 
 import com.zemlianikin.currency.calc.Calculation
 import com.zemlianikin.currency.calc.CalcError

@@ -1,6 +1,6 @@
 package com.zemlianikin.currency.calc.engine
 
-// Серый ящик: словарь лексера. Данные, а не код: RU и EN слиты, склонения перечислены явно (#3, #5).
+// Серый ящик: словарь лексера. Данные, а не код: RU и EN слиты, склонения перечислены явно.
 
 import com.zemlianikin.currency.core.CurrencyCode
 import com.zemlianikin.currency.core.Num
@@ -16,7 +16,7 @@ class Lexicon private constructor(private val words: Map<String, Meaning>) {
     sealed interface Meaning {
         data class Currency(val code: CurrencyCode) : Meaning
 
-        /** Слово, за которым стоит несколько валют: `kr`, `песо`. Разбор запрещён (#5). */
+        /** Слово, за которым стоит несколько валют: `kr`, `песо`. Разбор запрещён. */
         data class Ambiguous(val options: List<CurrencyCode>) : Meaning
 
         data class Scale(val factor: Num) : Meaning
@@ -120,7 +120,7 @@ class Lexicon private constructor(private val words: Map<String, Meaning>) {
 
 // Неоднозначные слова заведены не по русским названиям, а по смыслу: если у слова в справочнике
 // больше одной валюты, это ошибка «уточните». Единственное исключение из правила — `$` и слово
-// «доллар» с формами: всегда USD, остальные доллары только с префиксом (#5).
+// «доллар» с формами: всегда USD, остальные доллары только с префиксом.
 private fun Lexicon.Builder.defaultWords() {
     operator(Operation.Multiply, "x", "х")
     to("to", "in", "в", "на")

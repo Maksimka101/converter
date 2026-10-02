@@ -11,8 +11,8 @@ data class Span(val start: Int, val end: Int)
 /** Результат разбора и вычисления строки ввода. */
 sealed interface Calculation {
     /**
-     * virtualParens — позиции серых виртуальных '(' в тексте (#5).
-     * currencies — все валюты, упомянутые во вводе (`10 usd to eur` → USD, EUR); для frecency (#8).
+     * virtualParens — позиции серых виртуальных '(' в тексте.
+     * currencies — все валюты, упомянутые во вводе (`10 usd to eur` → USD, EUR); для frecency.
      */
     data class Ok(
         val value: Value,
@@ -20,7 +20,7 @@ sealed interface Calculation {
         val currencies: Set<CurrencyCode>,
     ) : Calculation
 
-    /** Ввод можно дописать справа до валидного: `5 +`, `10 us` (#3). */
+    /** Ввод можно дописать справа до валидного: `5 +`, `10 us`. */
     data object Incomplete : Calculation
 
     /** span — что подчеркнуть в тексте. */
@@ -28,7 +28,7 @@ sealed interface Calculation {
 }
 
 // ГЕЙТ: менять только с разрешения пользователя.
-/** Итоговое значение. Процент наружу не выходит — сворачивается в число (#5). */
+/** Итоговое значение. Процент наружу не выходит — сворачивается в число. */
 sealed interface Value {
     /** 90 usd */
     data class Money(val amount: Num, val currency: CurrencyCode) : Value

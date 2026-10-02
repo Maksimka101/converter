@@ -10,7 +10,7 @@ import com.zemlianikin.currency.core.CurrencyCode
 import com.zemlianikin.currency.core.RateTable
 
 /**
- * Backspace экранного numpad (#13): удаляет выделение или символ слева от курсора и пропускает правку через
+ * Backspace экранного numpad: удаляет выделение или символ слева от курсора и пропускает правку через
  * [editInput], как настоящий backspace (стирание ` + ` целиком и т.п.).
  */
 fun deleteInput(old: TextFieldValue, calculator: Calculator, rates: RateTable): TextFieldValue {
@@ -33,7 +33,7 @@ data class Suggestions(val codes: List<CurrencyCode>, val replace: TextRange) {
 }
 
 /**
- * Подсказки валют для режима numpad, где букв нет (#13). По приоритету:
+ * Подсказки валют для режима numpad, где букв нет. По приоритету:
  * 1. слово под курсором — валюты с таким началом (`us` → USD), по frecency;
  * 2. ошибка «уточните валюту» (`kr`) при курсоре вне слова — её варианты вместо слова с ошибкой;
  * 3. курсор после числа, `)`, `%` или `to` (с пробелом или вплотную) — топ [limit] по frecency.

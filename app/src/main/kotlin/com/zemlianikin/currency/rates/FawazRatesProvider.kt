@@ -17,7 +17,7 @@ private const val TIMEOUT_MS = 10_000
 private const val MAX_RESPONSE_BYTES = 4 * 1024 * 1024
 
 /**
- * Реальный источник курсов (#15): fawazahmed0/exchange-api. Пробует [urls] по порядку;
+ * Реальный источник курсов: fawazahmed0/exchange-api. Пробует [urls] по порядку;
  * если упали все — бросает исключение последней ошибки. Получение текста вынесено в [get],
  * чтобы провайдер проверялся без сети.
  */

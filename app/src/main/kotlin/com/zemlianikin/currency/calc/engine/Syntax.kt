@@ -27,7 +27,7 @@ sealed interface Token {
     /** usd, $, рублей */
     data class Currency(val code: CurrencyCode, override val span: Span) : Token
 
-    /** synthetic — вставлена балансировщиком, span нулевой ширины (#5). */
+    /** synthetic — вставлена балансировщиком, span нулевой ширины. */
     data class Paren(val open: Boolean, val synthetic: Boolean, override val span: Span) : Token
 
     /** to, in, в, на, → */

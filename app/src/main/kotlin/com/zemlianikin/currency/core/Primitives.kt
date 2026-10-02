@@ -3,7 +3,7 @@ package com.zemlianikin.currency.core
 import java.math.BigDecimal
 
 // ГЕЙТ: менять только с разрешения пользователя.
-/** Десятичное число без потери точности (#5). Округляется только при выводе. */
+/** Десятичное число без потери точности. Округляется только при выводе. */
 @JvmInline
 value class Num(val value: BigDecimal)
 

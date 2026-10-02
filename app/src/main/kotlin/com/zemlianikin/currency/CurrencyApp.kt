@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 /**
- * Держит то, что живёт дольше Activity: репозиторий курсов один на процесс (#15), а загрузка не обрывается
+ * Держит то, что живёт дольше Activity: репозиторий курсов один на процесс, а загрузка не обрывается
  * при повороте экрана и пересоздании Activity.
  */
 class CurrencyApp : Application() {

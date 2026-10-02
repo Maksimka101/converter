@@ -33,7 +33,7 @@ private sealed interface Typed {
         }
 }
 
-/** Вычисляет дерево по типам #5: проценты, смешанные валюты, отношение. */
+/** Вычисляет дерево по типам: проценты, смешанные валюты, отношение. */
 class TypedEvaluator : Evaluator {
     override fun eval(node: Node, rates: RateTable): Value =
         when (val v = Run(rates).eval(node)) {

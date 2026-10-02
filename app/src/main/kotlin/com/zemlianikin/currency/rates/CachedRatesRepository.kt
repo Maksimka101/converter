@@ -11,7 +11,7 @@ import java.time.Clock
 import java.time.Duration
 
 /**
- * [RatesRepository] поверх [RatesProvider] и [RatesCache] (#15).
+ * [RatesRepository] поверх [RatesProvider] и [RatesCache].
  *
  * Вызовы сериализуются мьютексом. [refreshIfStale] после захвата мьютекса заново проверяет,
  * свежи ли курсы, поэтому параллельный второй вызов не делает лишнего запроса. Явный [refresh] грузит всегда.

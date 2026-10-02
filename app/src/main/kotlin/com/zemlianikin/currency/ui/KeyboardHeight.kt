@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.debounce
 
 /**
  * Последняя высота системной клавиатуры в px от нижнего края экрана (вместе с навбаром), [px] = 0 — ещё не
- * видели. Numpad занимает ровно это место и режимы переключаются без сдвига остального экрана (#13).
+ * видели. Numpad занимает ровно это место и режимы переключаются без сдвига остального экрана.
  */
 @Stable
 class KeyboardHeight internal constructor(private val prefs: SharedPreferences, private val key: String) {

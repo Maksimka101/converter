@@ -13,7 +13,7 @@ import org.junit.Test
 class PipelineCalculatorTest {
     private val calc = defaultCalculator()
 
-    // 1 usd = 0.9 eur = 90 rub = 36 thb (как в ресерче #5)
+    // 1 usd = 0.9 eur = 90 rub = 36 thb (цифры условные)
     private val rates = RateTable(
         LocalDate.of(2026, 9, 25),
         mapOf("USD" to "1", "EUR" to "0.9", "RUB" to "90", "THB" to "36")

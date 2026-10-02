@@ -32,7 +32,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // На старте и при каждом возврате в приложение (#15); сам репозиторий решает, устарели ли курсы.
+    // На старте и при каждом возврате в приложение; сам репозиторий решает, устарели ли курсы.
     override fun onStart() {
         super.onStart()
         (application as CurrencyApp).refreshRatesIfStale()
@@ -50,7 +50,7 @@ fun App(repository: RatesRepository) {
     // Список валют frecency — из снимка; фиксируется при создании, поэтому ключ remember — набор валют:
     // пока курсов нет, он пуст, а когда снимок пришёл (или в нём изменился состав), frecency пересоздаётся.
     val currencies = remember(snapshot) { snapshot?.currencies.orEmpty().toSet() }
-    // PoC: стор на SharedPreferences, а не Room (#2).
+    // PoC: стор на SharedPreferences, а не Room.
     val frecency = remember(currencies) {
         DecayingFrecency(PrefsUsageStore(context), currencies.toList(), localeSeed(Locale.getDefault()))
     }

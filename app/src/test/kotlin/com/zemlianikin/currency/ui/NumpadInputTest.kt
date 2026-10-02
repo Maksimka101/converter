@@ -9,7 +9,7 @@ import com.zemlianikin.currency.rates.mockRates
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/** Экранный numpad (#13): backspace, подсказки валют и их подстановка. `|` — курсор. */
+/** Экранный numpad: backspace, подсказки валют и их подстановка. `|` — курсор. */
 class NumpadInputTest {
 
     private val calculator = defaultCalculator()

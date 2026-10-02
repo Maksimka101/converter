@@ -36,7 +36,7 @@ import com.zemlianikin.currency.R
 
 /**
  * Поле ввода выражения: только внешний вид. Правки текста и подчёркивание ошибки приходят снаружи
- * ([onValueChange], [visualTransformation]), клавиатурные настройки из #13 не менялись.
+ * ([onValueChange], [visualTransformation]), клавиатурные настройки не менялись.
  */
 @Composable
 fun ExpressionField(
