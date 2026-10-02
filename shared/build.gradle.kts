@@ -7,6 +7,7 @@ plugins {
 
 kotlin {
     jvmToolchain(21)
+    compilerOptions { freeCompilerArgs.add("-Xexpect-actual-classes") }
 
     android {
         namespace = "com.zemlianikin.currency.shared"
@@ -29,6 +30,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            api(libs.kotlinx.datetime)
             implementation(libs.cmp.runtime)
             implementation(libs.cmp.foundation)
             implementation(libs.cmp.ui)
@@ -50,6 +52,18 @@ compose.resources {
 
 compose.desktop {
     application {
-        mainClass = "com.zemlianikin.currency.spike.MainKt"
+        mainClass = "com.zemlianikin.currency.MainKt"
+        // Пакеты собираются только на своей ОС (jpackage): ./gradlew :shared:packageDistributionForCurrentOS
+        nativeDistributions {
+            targetFormats(
+                org.jetbrains.compose.desktop.application.dsl.TargetFormat.Dmg,
+                org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi,
+                org.jetbrains.compose.desktop.application.dsl.TargetFormat.Deb,
+            )
+            packageName = "currency-converter"
+            packageVersion = "1.0.0"
+            // jlink сам их не находит: java.prefs — JavaPrefsStore, jdk.crypto.ec — TLS для загрузки курсов.
+            modules("java.prefs", "jdk.crypto.ec")
+        }
     }
 }

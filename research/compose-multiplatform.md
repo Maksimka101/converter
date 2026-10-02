@@ -86,11 +86,35 @@ Desktop `main()` живёт в `shared/jvmMain`, без третьего мод�
 
 ## 7. Ход работ
 - **Этап 0** — сделан (§6).
-- **Этап 1** — сделан (2026-10-02), 219 тестов проходят. `java.math` остался только в `core/Decimal.kt`,
-  `java.time` убран совсем. `httpGet` вынесен в `rates/HttpGet.kt`, `localeSeed` — в `data/LocaleSeed.kt`.
-  Не тронуто и уезжает в `jvmShared` как есть: `FileRatesCache`, `HttpGet`, `LocaleSeed`, `ValueFormatter`,
-  `CurrencyDirectory` (последние два получат общий контракт на этапе 4, когда UI поедет в common),
-  конструктор `Stop` без стектрейса (этап 3).
-- **Следующий шаг — этап 2**: тесты на `kotlin.test`, затем этап 3 (разрез на `shared` + `androidApp`).
-  В `shared/` пока лежит пробный код спайка (пакет `spike`) — на этапе 3 он заменяется настоящим.
-  Работа идёт в ветке `cmp-spike`.
+- **Этап 1** — сделан (2026-10-02): `java.math` только в `Decimal`, `java.time` убран.
+- **Этап 2** — сделан (2026-10-02): тесты на `kotlin.test`, JUnit как прямая зависимость убран.
+  Ловушка: у `kotlin.test` сообщение — последний аргумент, у JUnit — первый; `assertEquals(msg, a, b)` со
+  строками компилируется молча. `assertNotNull` возвращает значение — тест-выражение перестаёт быть `void`.
+- **Этап 3** — сделан (2026-10-02): `app` → `androidApp`, логика в `shared`. `Decimal` и `Stop` — `expect class`
+  с `actual` в `jvmSharedMain` (флаг `-Xexpect-actual-classes`). Из common убраны последние JVM-вызовы:
+  `Character.UnicodeScript`, `Character.charCount`, `putIfAbsent`.
+- **Этап 4** — сделан (2026-10-02): весь UI и `App()` в `commonMain`, строки в Compose Resources
+  (`app_name` остался в `androidApp`). Контракты:
+  - `ValueFormatter`, `CurrencyDirectory`, `localeSeed()` — `expect` в common, `actual` в `jvmSharedMain`;
+  - `ui/Platform.kt` — буфер обмена, цвета темы, ключ размера окна, `hasScreenKeyboard`;
+    `actual` в `androidMain` и `jvmMain`;
+  - `KeyValueStore` (строки) — `SharedPrefsStore` на Android, `JavaPrefsStore` на desktop; платформа передаёт
+    хранилища и репозиторий курсов в `App()`. Старые значения SharedPreferences (Boolean/Int) читаются строкой.
+- **Этап 5** — сделан (2026-10-02), **только скомпилирован**: `shared/jvmMain/Main.kt` — окно, обновление курсов
+  при запуске, кэш в каталоге ОС; numpad и его переключатель скрыты (`hasScreenKeyboard = false`).
+  На ПК не запускался: `./gradlew :shared:run`.
+- **Этап 6** — документация обновлена (`CLAUDE.md`). От CI отказались (у репозитория нет remote).
+  Для пакетов desktop в `shared/build.gradle.kts` есть блок `nativeDistributions` (версия пакета `1.0.0`: dmg не
+  принимает major 0; модули `java.prefs` и `jdk.crypto.ec` для jlink указаны вручную); сборка на ПК —
+  `./gradlew :shared:packageDistributionForCurrentOS`, не проверялась.
+
+Проверка на телефоне: 219 тестов в `:shared:jvmTest` (включая тесты UI-логики), debug- и release-APK собираются.
+Не проверено запуском: APK после этапа 4 (строки из Compose Resources, настройки через `KeyValueStore`) и desktop.
+
+Что знать дальше:
+- `commonMain` компилируется только под JVM-цели, поэтому JVM-API в common компилятор не ловит
+  (`compileCommonMainKotlinMetadata` пропускается). Перед iOS/web — проверять на цели не-JVM.
+- Тесты с `runBlocking` (`CachedRatesRepository`, `FawazRatesProvider`) лежат в `jvmTest`; в `commonTest` они
+  переедут с `kotlinx-coroutines-test`, когда появится цель не-JVM.
+- В `androidApp` из зависимостей — только `activity-compose` и Compose BOM. BOM не убирать: без него
+  `material-ripple` приезжает 1.9.3 (от material3 1.4.0) при `ui`/`foundation` 1.12.1.
