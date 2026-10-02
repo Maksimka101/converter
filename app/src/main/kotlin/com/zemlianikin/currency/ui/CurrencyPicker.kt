@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -30,6 +31,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.zemlianikin.currency.R
 import com.zemlianikin.currency.core.CurrencyCode
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Окно поиска валюты по названию, коду или стране (системная клавиатура: в numpad букв нет). Только вид:
@@ -43,7 +46,10 @@ fun CurrencyPickerDialog(
     onDismiss: () -> Unit,
 ) {
     var query by remember { mutableStateOf("") }
-    val matches = remember(query, ranking) { directory.search(query, ranking) }
+    // Не на главном потоке: первый поиск строит справочник названий и стран, это заметное время.
+    val matches by produceState(emptyList<CurrencyMatch>(), query, ranking) {
+        value = withContext(Dispatchers.Default) { directory.search(query, ranking) }
+    }
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { focus.requestFocus() }
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {

@@ -9,20 +9,22 @@ import java.util.Locale
  * Холодный старт: если стор пуст, [seed] записывается со score 1.0 и дальше распадается как обычное использование.
  * Рейтинг — seed-валюты из [known] и все, что когда-либо использовали (список пополняется автоматически):
  * по убыванию score, при равенстве порядок seed, затем порядок записи. Остальные [known] в рейтинг не входят,
- * их добавляет только использование.
+ * их добавляет только использование. Про выражение и про топ-N не знает: исключения и обрезку делает вызывающий.
  */
 class DecayingFrecency(
     private val store: CurrencyUsageStore,
     private val known: List<CurrencyCode>,
     private val seed: List<CurrencyCode>,
     private val halfLife: Duration = Duration.ofDays(21),
-) : CurrencyFrecency {
-    override suspend fun recordUsed(used: Set<CurrencyCode>, now: Instant) {
+) {
+    /** [used] — различные валюты выражения, каждая засчитывается с весом 1. */
+    suspend fun recordUsed(used: Set<CurrencyCode>, now: Instant) {
         val usage = loadSeeded(now)
         store.save(used.associateWith { CurrencyUsage(scoreAt(usage[it], now) + 1.0, now) })
     }
 
-    override suspend fun ranking(now: Instant): List<CurrencyCode> {
+    /** Рейтинг по убыванию score на момент [now]. */
+    suspend fun ranking(now: Instant): List<CurrencyCode> {
         val usage = loadSeeded(now)
         val base = (seed.filter { it in known } + usage.keys).distinct()
         return base.sortedByDescending { scoreAt(usage[it], now) } // sortedBy стабилен

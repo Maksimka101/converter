@@ -50,7 +50,6 @@ fun App(repository: RatesRepository) {
     // Список валют frecency — из снимка; фиксируется при создании, поэтому ключ remember — набор валют:
     // пока курсов нет, он пуст, а когда снимок пришёл (или в нём изменился состав), frecency пересоздаётся.
     val currencies = remember(snapshot) { snapshot?.currencies.orEmpty().toSet() }
-    // PoC: стор на SharedPreferences, а не Room.
     val frecency = remember(currencies) {
         DecayingFrecency(PrefsUsageStore(context), currencies.toList(), localeSeed(Locale.getDefault()))
     }

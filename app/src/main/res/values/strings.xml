@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Currency</string>
+    <string name="app_name">Converter</string>
 
     <string name="input_hint">10 usd - 10% to eur</string>
     <string name="mode_numpad">Цифровая клавиатура</string>
@@ -10,7 +10,7 @@
     <string name="currency_search_hint">Валюта или страна</string>
     <string name="currency_search_empty">Ничего не найдено</string>
     <string name="clear">Очистить</string>
-    <string name="rates_footer">Курсы на %1$s</string>
+    <string name="rates_fresh">Курсы на %1$s</string>
     <string name="rates_stale">Курсы на %1$s · не удалось обновить</string>
     <string name="rates_day_today">сегодня</string>
     <string name="rates_day_yesterday">вчера</string>

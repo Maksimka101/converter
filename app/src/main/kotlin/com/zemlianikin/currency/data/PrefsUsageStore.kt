@@ -6,7 +6,7 @@ import com.zemlianikin.currency.core.CurrencyUsage
 import com.zemlianikin.currency.core.CurrencyUsageStore
 import java.time.Instant
 
-/** PoC-стор для frecency на SharedPreferences: `USD` → `score;epochMillis`. Целевое хранилище — Room. */
+/** Стор frecency на SharedPreferences: `USD` → `score;epochMillis`. */
 class PrefsUsageStore(context: Context) : CurrencyUsageStore {
     private val prefs = context.getSharedPreferences("frecency", Context.MODE_PRIVATE)
 

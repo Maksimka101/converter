@@ -21,6 +21,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.InterceptPlatformTextInput
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
@@ -46,6 +48,7 @@ fun ExpressionField(
     onClear: () -> Unit,
     numpad: Boolean,
     onToggleMode: () -> Unit,
+    focusRequester: FocusRequester,
     modifier: Modifier = Modifier,
 ) {
     val interaction = remember { MutableInteractionSource() }
@@ -58,7 +61,7 @@ fun ExpressionField(
     Surface(
         shape = MaterialTheme.shapes.extraLarge,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        modifier = Modifier.fillMaxWidth().border(2.dp, border, MaterialTheme.shapes.extraLarge),
+        modifier = modifier.fillMaxWidth().border(2.dp, border, MaterialTheme.shapes.extraLarge),
     ) {
         // Справа меньше, чем слева: у кнопки 48 dp области касания, подпись внутри по центру добавляет ещё ~10 dp.
         Row(Modifier.padding(start = 20.dp, end = 10.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -95,7 +98,7 @@ fun ExpressionField(
                                 inner()
                             }
                         },
-                        modifier = modifier.weight(1f),
+                        modifier = Modifier.weight(1f).focusRequester(focusRequester),
                     )
                 }
             }
