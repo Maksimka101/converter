@@ -11,8 +11,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 
 actual val hasScreenKeyboard: Boolean = true
+
+// «Видимый пароль», как в Termux: Gboard показывает над буквами ряд цифр (у обычного текста он зависит
+// от настройки) и не подсказывает ввод. Обычный Password зовёт менеджер паролей.
+actual val expressionKeyboardType: KeyboardType = KeyboardType.PasswordVisible
 
 actual fun plainTextEntry(text: String): ClipEntry = ClipEntry(ClipData.newPlainText(null, text))
 

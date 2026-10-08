@@ -1,5 +1,7 @@
 package com.zemlianikin.currency.core
 
+import kotlin.jvm.JvmInline
+
 /** Десятичное число без потери точности. Округляется только при выводе. */
 @JvmInline
 value class Num(val value: Decimal)

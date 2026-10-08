@@ -234,4 +234,4 @@ private const val OPERATORS = "+-*/×÷−"
 /** Слово (валюта, `of`, `to`) считаем операндом: `of -5` получит лишние пробелы, парсер их не замечает. */
 private fun Char.endsOperand() = isLetterOrDigit() || this == ')' || this == '%' || isCurrencySymbol()
 
-private fun Char.isCurrencySymbol() = Character.getType(this) == Character.CURRENCY_SYMBOL.toInt()
+private fun Char.isCurrencySymbol() = category == CharCategory.CURRENCY_SYMBOL

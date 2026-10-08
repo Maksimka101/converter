@@ -7,6 +7,7 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -25,10 +26,10 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.InterceptPlatformTextInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -59,6 +60,7 @@ fun ExpressionField(
         Motion.effects(),
     )
     val textStyle = MaterialTheme.typography.headlineMedium
+    val lineHeight = with(LocalDensity.current) { textStyle.lineHeight.toDp() }
     Surface(
         shape = MaterialTheme.shapes.extraLarge,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -80,14 +82,13 @@ fun ExpressionField(
                         keyboardOptions = KeyboardOptions(
                             capitalization = KeyboardCapitalization.None,
                             autoCorrectEnabled = false,
-                            // «Видимый пароль», как в Termux: Gboard показывает над буквами ряд цифр (у обычного текста
-                            // он зависит от настройки) и не подсказывает ввод. Обычный Password зовёт менеджер паролей.
-                            keyboardType = KeyboardType.PasswordVisible,
+                            keyboardType = expressionKeyboardType,
                             showKeyboardOnFocus = !numpad,
                         ),
                         visualTransformation = visualTransformation,
                         decorationBox = { inner ->
-                            Box(Modifier.padding(vertical = 20.dp), contentAlignment = Alignment.CenterStart) {
+                            // Высота строки задана явно: в браузере пустое поле выходит выше поля с текстом.
+                            Box(Modifier.padding(vertical = 20.dp).height(lineHeight), contentAlignment = Alignment.CenterStart) {
                                 if (value.text.isEmpty()) {
                                     Text(
                                         stringResource(Res.string.input_hint),

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <!-- viewport-fit=cover: страница рисуется и под системной навигацией, где браузер это умеет.
+         interactive-widget=resizes-content: экранная клавиатура сжимает страницу, как adjustResize, а не наезжает
+         на неё (отступа под клавиатуру Compose в браузере сам не делает). -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+    <!-- Под статус-бар страницу не пускают, поэтому красим его и фон в цвет экрана: surface из
+         lightColorScheme() / darkColorScheme() (Platform.wasmJs.kt). Цвет по теме ставит скрипт ниже:
+         установленное приложение теги с media не учитывает. -->
+    <meta name="theme-color" content="#141218">
+    <title>Converter</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <style>
+        html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #FEF7FF; }
+        @media (prefers-color-scheme: dark) { html, body { background: #141218; } }
+        input[type=search]::-webkit-search-cancel-button, input[type=search]::-webkit-search-decoration { display: none; }
+    </style>
+</head>
+<body>
+<script>
+    // Системный ввод Compose принимает через своё невидимое поле. Над клавиатурой Chrome на Android показывает
+    // у input type=text полосу автозаполнения (пароли, карты), а у type=search — нет, поэтому текстовые input,
+    // которые создаёт страница, делаем поисковыми. Стоит до shared.js: поле должно родиться уже таким.
+    (() => {
+        const hideSearchButtons = document.querySelector("style").textContent;
+        const searchInsteadOfText = type => type === "text" ? "search" : type;
+        const type = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "type");
+        const createElement = Document.prototype.createElement;
+        Document.prototype.createElement = function (name, ...rest) {
+            const element = createElement.call(this, name, ...rest);
+            if (String(name).toLowerCase() !== "input") return element;
+            Object.defineProperty(element, "type", {
+                get() { return type.get.call(this); },
+                set(value) { type.set.call(this, searchInsteadOfText(value)); },
+            });
+            const setAttribute = element.setAttribute;
+            element.setAttribute = (key, value) => setAttribute.call(element, key, key === "type" ? searchInsteadOfText(value) : value);
+            element.type = "text";
+            return element;
+        };
+        // Поле может жить в shadow DOM, куда стили страницы не достают: крестик поиска прячем и там.
+        const attachShadow = Element.prototype.attachShadow;
+        Element.prototype.attachShadow = function (init) {
+            const root = attachShadow.call(this, init);
+            root.appendChild(createElement.call(document, "style")).textContent = hideSearchButtons;
+            return root;
+        };
+    })();
+</script>
+<script src="shared.js"></script>
+<script>
+    const dark = matchMedia("(prefers-color-scheme: dark)");
+    const paintStatusBar = () => document.querySelector("meta[name=theme-color]").content = dark.matches ? "#141218" : "#FEF7FF";
+    paintStatusBar();
+    dark.addEventListener("change", paintStatusBar);
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
+</script>
+</body>
+</html>

@@ -3,11 +3,15 @@ package com.zemlianikin.currency.ui
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.text.input.KeyboardType
 
 // То, что в Compose на платформах устроено по-разному.
 
 /** Есть экранная клавиатура. Без неё numpad и его переключатель не нужны. */
 expect val hasScreenKeyboard: Boolean
+
+/** Тип системной клавиатуры у поля ввода выражения: буквы и цифры без подсказок и автозамены. */
+expect val expressionKeyboardType: KeyboardType
 
 /** Текст для буфера обмена. */
 expect fun plainTextEntry(text: String): ClipEntry
