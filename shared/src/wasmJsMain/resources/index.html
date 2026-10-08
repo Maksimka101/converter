@@ -4,8 +4,10 @@
     <meta charset="utf-8">
     <!-- viewport-fit=cover: страница рисуется и под системной навигацией, где браузер это умеет.
          interactive-widget=resizes-content: экранная клавиатура сжимает страницу, как adjustResize, а не наезжает
-         на неё (отступа под клавиатуру Compose в браузере сам не делает). -->
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+         на неё (отступа под клавиатуру Compose в браузере сам не делает).
+         maximum-scale=1, user-scalable=no: масштаб щипком выключен (Safari это игнорирует, для него — touch-action
+         и скрипт внизу). -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
     <!-- Под статус-бар страницу не пускают, поэтому красим его и фон в цвет экрана: surface из
          lightColorScheme() / darkColorScheme() (Platform.wasmJs.kt). Цвет по теме ставит скрипт ниже:
          установленное приложение теги с media не учитывает. -->
@@ -15,7 +17,7 @@
     <link rel="icon" href="icon.svg">
     <link rel="apple-touch-icon" href="icon-192.png">
     <style>
-        html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #FEF7FF; }
+        html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #FEF7FF; touch-action: none; }
         @media (prefers-color-scheme: dark) { html, body { background: #141218; } }
         input[type=search]::-webkit-search-cancel-button, input[type=search]::-webkit-search-decoration { display: none; }
     </style>
@@ -58,6 +60,29 @@
     paintStatusBar();
     dark.addEventListener("change", paintStatusBar);
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
+
+    // Safari interactive-widget не знает: клавиатура наезжает на страницу, а видимую часть можно возить пальцем по
+    // закрытой. Поэтому сами держим высоту страницы равной видимой области и возвращаем прокрутку в начало.
+    const visible = window.visualViewport;
+    if (visible) {
+        let height = 0;
+        const fitVisible = () => {
+            scrollTo(0, 0);
+            const now = Math.round(visible.height);
+            if (now === height) return;
+            height = now;
+            document.documentElement.style.height = height + "px";
+            // Compose меряет контейнер по resize окна, а Safari его при клавиатуре не шлёт.
+            dispatchEvent(new Event("resize"));
+        };
+        visible.addEventListener("resize", fitVisible);
+        visible.addEventListener("scroll", fitVisible);
+        // Compose гасит только те движения пальца, что сам прокрутил; остальные Safari тратит на сдвиг страницы
+        // и масштаб щипком. gesturestart — щипок в Safari (в том числе на тачпаде).
+        document.addEventListener("touchmove", event => event.preventDefault(), { passive: false });
+        document.addEventListener("gesturestart", event => event.preventDefault());
+        fitVisible();
+    }
 </script>
 </body>
 </html>
