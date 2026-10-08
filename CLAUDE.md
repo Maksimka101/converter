@@ -22,6 +22,8 @@ Compose Multiplatform: Android + desktop (JVM), сборка в Termux на те
   Тесты в wasm не идут: Skiko в Node не грузится.
   PWA: `manifest.json` и `sw.js` в `wasmJsMain/resources`; список файлов для офлайн-кэша в `sw.js` вписывает
   сборка дистрибутива. Иконки `icon-*.png` получены из `icon.svg` через `rsvg-convert`.
+  Публикация: пуш в `master` собирает production в GitHub Actions и выкладывает на Pages
+  (`.github/workflows/pages.yml`).
 - Desktop на телефоне только компилируется (Skiko в Termux не грузится); запуск на ПК — `./gradlew :shared:run`,
   пакет — `./gradlew :shared:packageDistributionForCurrentOS`. На ПК ещё не запускался и не собирался.
 
