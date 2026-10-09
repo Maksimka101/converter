@@ -20,6 +20,19 @@
         html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #FEF7FF; touch-action: none; }
         @media (prefers-color-scheme: dark) { html, body { background: #141218; } }
         input[type=search]::-webkit-search-cancel-button, input[type=search]::-webkit-search-decoration { display: none; }
+        /* Системных отступов Compose в браузере не знает, а iOS с viewport-fit=cover пускает страницу под полоску
+           «домой», скругления и вырез. Отдаём безопасную зону в переменных, их читает extraSafeArea()
+           (Platform.wasmJs.kt), и приложение отступает само, а фон рисует до краёв. Только iOS
+           (-webkit-touch-callout есть лишь там). При клавиатуре нижний отступ не нужен — класс ставит скрипт внизу. */
+        @supports (-webkit-touch-callout: none) {
+            html {
+                --safe-top: env(safe-area-inset-top);
+                --safe-right: env(safe-area-inset-right);
+                --safe-bottom: env(safe-area-inset-bottom);
+                --safe-left: env(safe-area-inset-left);
+            }
+            html.keyboard { --safe-bottom: 0px; }
+        }
     </style>
 </head>
 <body>
@@ -72,6 +85,8 @@
             if (now === height) return;
             height = now;
             document.documentElement.style.height = height + "px";
+            // Раскладку под клавиатуру Safari не сжимает, так что клавиатура — это видимая область заметно ниже окна.
+            document.documentElement.classList.toggle("keyboard", innerHeight - height > 100);
             // Compose меряет контейнер по resize окна, а Safari его при клавиатуре не шлёт.
             dispatchEvent(new Event("resize"));
         };

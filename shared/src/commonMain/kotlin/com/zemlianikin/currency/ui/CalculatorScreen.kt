@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -114,7 +115,9 @@ fun CalculatorScreen(
     Surface(Modifier.fillMaxSize()) {
         Column(
             Modifier
-                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top))
+                .windowInsetsPadding(
+                    WindowInsets.safeDrawing.union(extraSafeArea()).only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top),
+                )
                 .windowInsetsPadding(keyboard.bottomInsets)
                 .padding(horizontal = 16.dp)
                 .padding(top = 8.dp),

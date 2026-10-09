@@ -1,5 +1,6 @@
 package com.zemlianikin.currency.ui
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -23,3 +24,6 @@ actual fun platformColorScheme(dark: Boolean): ColorScheme = if (dark) darkColor
 // Экранной клавиатуры на desktop нет — ключ один.
 @Composable
 actual fun windowSizeKey(): String = "desktop"
+
+@Composable
+actual fun extraSafeArea(): WindowInsets = WindowInsets(0)

@@ -2,6 +2,7 @@ package com.zemlianikin.currency.ui
 
 import android.content.ClipData
 import android.os.Build
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -38,3 +39,6 @@ actual fun windowSizeKey(): String {
     val config = LocalConfiguration.current
     return "${config.screenWidthDp}x${config.screenHeightDp}"
 }
+
+@Composable
+actual fun extraSafeArea(): WindowInsets = WindowInsets(0)

@@ -64,7 +64,7 @@ fun keyboardLayout(prefs: KeyValueStore): KeyboardLayout {
     }
     // Edge-to-edge: отступаем от системной полоски навигации (navigationBars), а фон под ней всё равно
     // рисует на весь экран Surface экрана — окно не ужимается, просто контент не наезжает на полоску.
-    val bar = WindowInsets.navigationBars.only(WindowInsetsSides.Bottom)
+    val bar = WindowInsets.navigationBars.union(extraSafeArea()).only(WindowInsetsSides.Bottom)
     val safeBottom = bar.union(WindowInsets.ime).union(WindowInsets.displayCutout).only(WindowInsetsSides.Bottom)
     val bottomInsets = when {
         numpad -> bar

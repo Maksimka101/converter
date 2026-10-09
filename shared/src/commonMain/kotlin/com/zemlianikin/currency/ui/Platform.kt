@@ -1,5 +1,6 @@
 package com.zemlianikin.currency.ui
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ClipEntry
@@ -23,3 +24,10 @@ expect fun platformColorScheme(dark: Boolean): ColorScheme
 /** Ключ размера окна: высота клавиатуры запоминается отдельно для каждого. */
 @Composable
 expect fun windowSizeKey(): String
+
+/**
+ * Отступы от системных полосок, скруглений и вырезов, о которых не знают `WindowInsets` Compose: в браузере
+ * они всегда нулевые. На Android и desktop добавлять нечего.
+ */
+@Composable
+expect fun extraSafeArea(): WindowInsets
