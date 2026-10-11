@@ -10,6 +10,8 @@ Keyboard-driven currency converter with a calculator, Raycast-style: type an exp
 
 **Try it:** https://maksimka101.github.io/converter/ (installable as a PWA)
 
+<img src="docs/screenshot.jpg" alt="Converter on Android: (30 usd - 7 eur) + 10% = 24.37 USD" width="320">
+
 ## Features
 - Arithmetic, brackets and percentages mixed with currencies in one expression.
 - Currency codes, symbols (`$`, `€`, `₽`) and names in English and Russian; `k` / `m` / `тыс` / `млн` scales.
